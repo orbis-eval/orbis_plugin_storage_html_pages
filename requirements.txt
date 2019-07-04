@@ -1,0 +1,2 @@
+orbis>=2.0
+palettable==3.1.1
