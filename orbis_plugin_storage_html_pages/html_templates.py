@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 html_body = """
 <!doctype html>
 <html lang="en">

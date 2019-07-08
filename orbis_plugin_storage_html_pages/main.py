@@ -1,5 +1,7 @@
-from orbis import app
-from orbis.libs import files
+# -*- coding: utf-8 -*-
+
+from orbis_eval import app
+from orbis_eval.libs import files
 from .html_templates import html_body
 
 import os
@@ -7,11 +9,11 @@ from palettable.tableau import Tableau_20
 from operator import itemgetter
 
 
-class HTMLPages(object):
+class Main(object):
 
     def __init__(self, rucksack):
 
-        super(HTMLPages, self).__init__()
+        super(Main, self).__init__()
         self.rucksack = rucksack
         self.config = self.rucksack.open['config']
         self.data = self.rucksack.open['data']
@@ -318,7 +320,6 @@ class HTMLPages(object):
                 previous_item = self.queue[self.queue.index(item_key) - 1]
             except IndexError:
                 previous_item = None
-            app.logger.error(f"PREVIOUS: {previous_item}")
 
             key = item['index']
             keys = self._get_keys(item)
