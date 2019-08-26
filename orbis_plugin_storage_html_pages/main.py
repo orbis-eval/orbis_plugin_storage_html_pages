@@ -24,10 +24,13 @@ class Main(object):
     def get_keys(self, item):
 
         keys = set()
-        for entity in item['gold']:
-            keys.add(entity['key'])
-        for entity in item['computed']:
-            keys.add(entity['key'])
+        if item.get('gold'):
+            for entity in item['gold']:
+                keys.add(entity['key'])
+
+        if item.get('computed'):
+            for entity in item['computed']:
+                keys.add(entity['key'])
         return keys
 
     def get_sf_colors(self, keys):
