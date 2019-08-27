@@ -19,7 +19,22 @@ class Main(object):
         self.data = self.rucksack.open['data']
         self.pass_name = self.rucksack.open['config']['file_name'].split(".")[0]
         self.folder = os.path.join(app.paths.output_path, "html_pages", self.pass_name)
-        self.queue = self.rucksack.get_keys()
+        self.queue = self.sort_queue(self.rucksack.get_keys())
+
+    def sort_queue(self, queue):
+        int_queue = []
+
+        for item in queue:
+            try:
+                int_queue.append(int(item))
+            except ValueError:
+                int_queue.append(item)
+        int_queue = sorted(int_queue)
+
+        new_queue = [str(item) for item in int_queue]
+
+        return new_queue
+
 
     def get_keys(self, item):
 
@@ -44,7 +59,7 @@ class Main(object):
 
     def run(self):
 
-        app.logger.debug("Building HTML pages")
+        app.logger.info("Building HTML pages")
 
         timestamp = files.get_timestamp()
         folder_dir = os.path.join(self.folder + f"-{timestamp}")
@@ -52,6 +67,7 @@ class Main(object):
         pages = {}
 
         for item_key in self.queue:
+            app.logger.info(f"Building Page: {item_key}")
             item = self.rucksack.itemview(item_key)
 
             try:

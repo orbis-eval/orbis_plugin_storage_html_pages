@@ -209,6 +209,7 @@ def get_top_header(config, rucksack):
 
 
 def get_item_header(rucksack, key):
+
     item_header_0 = {
         "precision": rucksack.resultview(key, specific='binary_classification')['precision'],
         "recall": rucksack.resultview(key, specific='binary_classification')['recall'],
@@ -219,6 +220,7 @@ def get_item_header(rucksack, key):
         "fp": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['fp']),
         "fn": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['fn'])
     }
+
     header_html_0 = """
     <b>Precision:</b>\t{precision:.3f}</br>
     <b>Recall:</b>\t{recall:.3f}</br>
