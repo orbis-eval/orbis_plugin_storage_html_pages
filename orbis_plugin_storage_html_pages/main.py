@@ -9,6 +9,10 @@ from palettable.tableau import Tableau_20
 from operator import itemgetter
 
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 class Main(object):
 
     def __init__(self, rucksack):
@@ -35,9 +39,7 @@ class Main(object):
 
         return new_queue
 
-
     def get_keys(self, item):
-
         keys = set()
         if item.get('gold'):
             for entity in item['gold']:
@@ -59,7 +61,7 @@ class Main(object):
 
     def run(self):
 
-        app.logger.info("Building HTML pages")
+        logger.info("Building HTML pages")
 
         timestamp = files.get_timestamp()
         folder_dir = os.path.join(self.folder + f"-{timestamp}")
@@ -67,7 +69,7 @@ class Main(object):
         pages = {}
 
         for item_key in self.queue:
-            app.logger.info(f"Building Page: {item_key}")
+            logger.info(f"Building Page: {item_key}")
             item = self.rucksack.itemview(item_key)
 
             try:
@@ -87,9 +89,9 @@ class Main(object):
             pages[key] = html_blocks
 
             file_dir = os.path.join(folder_dir, str(key) + ".html")
-            app.logger.debug(file_dir)
+            logger.debug(file_dir)
             with open(file_dir, "w") as open_file:
                 open_file.write(html)
 
-        app.logger.info("Finished building HTML pages")
+        logger.info("Finished building HTML pages")
         return pages
