@@ -1,7 +1,7 @@
+"""Summary
+"""
 from operator import itemgetter
 import os
-
-from orbis_eval import app
 
 from .templates.arrow_key_navigation import arrow_key_navigation as arrow_key_navigation_template
 from .templates.bootstrap_core_css import bootstrap_core_css as bootstrap_core_css_template
@@ -20,20 +20,35 @@ from .templates.predicted_entities import predicted_entities as predicted_entiti
 
 
 def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
+    """Summary
+
+    Args:
+        rucksack (TYPE): Description
+        item (TYPE): Description
+        sf_colors (TYPE): Description
+        gold_html (TYPE): Description
+        entity_types (bool, optional): Description
+
+    Returns:
+        TYPE: gold_entities, gold_html
+    """
 
     gold_entities = []
+
     if not item['gold'] or len(item['gold']) <= 0:
-        return [], []
+        return gold_entities, gold_html
 
     last_start = int(len(item['corpus']))
     last_end = int(len(item['corpus']))
 
     for entity in sorted(item['gold'], key=itemgetter("end"), reverse=True):
 
-        if entity_types:
-            if len(entity_types) > 0:
-                if entity['entity_type'] not in entity_types:
-                    continue
+        if (
+            entity_types and
+            len(entity_types) > 0 and
+            entity['entity_type'] not in entity_types
+        ):
+            continue
 
         start_tag = f'<abbr title="{entity["key"]}" style="background-color:{sf_colors[entity["key"]]};">'
         end_tag = '</abbr>'
@@ -68,17 +83,30 @@ def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
             "start": entity['start'],
             "end": entity['end'],
             "entity_type": entity['entity_type'],
-            "background": sf_colors[entity['key']]})
+            "background": sf_colors[entity['key']]
+        })
 
     return gold_entities, gold_html
 
 
 def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
+    """Summary
+
+    Args:
+        config (TYPE): Description
+        rucksack (TYPE): Description
+        item (TYPE): Description
+        sf_colors (TYPE): Description
+        predicted_html (TYPE): Description
+
+    Returns:
+        TYPE: predicted_entities, predicted_html
+    """
 
     predicted_entities = []
 
     if len(item['computed']) <= 0:
-        return [], []
+        return predicted_entities, predicted_html
 
     last_start = len(item['corpus'])
     last_end = len(item['corpus'])
@@ -131,13 +159,22 @@ def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
             "start": entity['document_start'],
             "end": entity['document_end'],
             "entity_type": entity['entity_type'],
-            "background": sf_colors[entity['key']]})
+            "background": sf_colors[entity['key']]
+        })
 
     return predicted_entities, predicted_html
 
 
 def get_top_header(config, rucksack):
+    """Summary
 
+    Args:
+        config (TYPE): Description
+        rucksack (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     top_header_0 = {
         "aggregator_name": config['aggregation']['service']['name'],
         "aggregator_profile": config['aggregation']['service'].get("profile", "None"),
@@ -204,7 +241,15 @@ def get_top_header(config, rucksack):
 
 
 def get_item_header(rucksack, key):
+    """Summary
 
+    Args:
+        rucksack (TYPE): Description
+        key (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     item_header_0 = {
         "precision": rucksack.resultview(key, specific='binary_classification')['precision'],
         "recall": rucksack.resultview(key, specific='binary_classification')['recall'],
@@ -232,7 +277,16 @@ def get_item_header(rucksack, key):
 
 
 def get_gold_html(rucksack, item, sf_colors):
+    """Summary
 
+    Args:
+        rucksack (TYPE): Description
+        item (TYPE): Description
+        sf_colors (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     gold_html = item['corpus']
     entity_types = rucksack.result_summary(specific='binary_classification')['entities']
     gold_entities, gold_html = get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types)
@@ -245,6 +299,17 @@ def get_gold_html(rucksack, item, sf_colors):
 
 
 def get_predicted_html(config, rucksack, item, sf_colors):
+    """Summary
+
+    Args:
+        config (TYPE): Description
+        rucksack (TYPE): Description
+        item (TYPE): Description
+        sf_colors (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
 
     predicted_html = item['corpus']
     # logger.error(f"250: {item['computed']}")
@@ -258,11 +323,20 @@ def get_predicted_html(config, rucksack, item, sf_colors):
 
 
 def get_next_button(key):
+    """Summary
+
+    Args:
+        key (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
+
+    html = """<p><a id="next_page_link" class="btn btn-secondary" href="{url}" role="button" style="float: right;">Next Item &raquo;</a></p>"""
+    url = os.path.join(str(key) + ".html")
 
     if key:
-        next_item = os.path.join(str(key) + ".html")
-
-        next_button = """<p><a id="next_page_link" class="btn btn-secondary" href="{url}" role="button" style="float: right;">Next Item &raquo;</a></p>""".format(url=next_item)
+        next_button = html.format(url=url)
     else:
         next_button = ""
 
@@ -270,10 +344,20 @@ def get_next_button(key):
 
 
 def get_previous_button(key):
+    """Summary
+
+    Args:
+        key (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
+
+    html = """<p><a id="previous_page_link" class="btn btn-secondary" href="{url}" role="button">&laquo; Previous Item</a></p>"""
+    url = os.path.join(str(key) + ".html")
 
     if key:
-        previous_item = os.path.join(str(key) + ".html")
-        previous_button = """<p><a id="previous_page_link" class="btn btn-secondary" href="{url}" role="button">&laquo; Previous Item</a></p>""".format(url=previous_item)
+        previous_button = html.format(url=url)
     else:
         previous_button = ""
 
@@ -281,6 +365,19 @@ def get_previous_button(key):
 
 
 def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors):
+    """Summary
+
+    Args:
+        config (TYPE): Description
+        rucksack (TYPE): Description
+        item (TYPE): Description
+        next_item (TYPE): Description
+        previous_item (TYPE): Description
+        sf_colors (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
 
     key = item['index']
 
@@ -330,11 +427,32 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors):
 
 
 def build_page(html_item_dict):
+    """Summary
+
+    Args:
+        html_item_dict (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     html = html_body_template.format(**html_item_dict)
     return html
 
 
 def build(config, rucksack, item, next_item, previous_item, sf_colors):
+    """Summary
+
+    Args:
+        config (TYPE): Description
+        rucksack (TYPE): Description
+        item (TYPE): Description
+        next_item (TYPE): Description
+        previous_item (TYPE): Description
+        sf_colors (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     html_blocks = build_blocks(config, rucksack, item, next_item, previous_item, sf_colors)
     html = build_page(html_blocks)
     return html, html_blocks

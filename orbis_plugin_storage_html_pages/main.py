@@ -6,8 +6,6 @@ from .build_html import build
 
 import os
 from palettable.tableau import Tableau_20
-from operator import itemgetter
-
 
 import logging
 logger = logging.getLogger(__name__)
@@ -33,8 +31,8 @@ class Main(object):
                 int_queue.append(int(item))
             except ValueError:
                 int_queue.append(item)
-        int_queue = sorted(int_queue)
 
+        int_queue = sorted(int_queue)
         new_queue = [str(item) for item in int_queue]
 
         return new_queue
@@ -81,6 +79,8 @@ class Main(object):
                 previous_item = self.queue[self.queue.index(item_key) - 1]
             except IndexError:
                 previous_item = None
+
+            previous_item = previous_item if previous_item != item_key else None
 
             key = item['index']
             sf_colors = self.get_sf_colors(self.get_keys(item))
