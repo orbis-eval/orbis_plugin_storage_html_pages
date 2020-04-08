@@ -89,6 +89,17 @@ def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
     return gold_entities, gold_html
 
 
+def get_state_tag(is_fp, is_fn, is_tp):
+    state_tag = ""
+    if is_fp:
+        state_tag = "False Positive"
+    elif is_fn:
+        state_tag = "False Negative"
+    elif is_tp:
+        state_tag = "True Positive"
+    return state_tag
+
+
 def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
     """Summary
 
@@ -121,12 +132,16 @@ def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
         is_fp = False
         entity_id = "{},{}".format(entity['document_start'], entity['document_end'])
         is_fp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids'] else False
+        is_tp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids'] else False
+        is_fn = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids'] else False
+
+        state_tag = get_state_tag(is_fp, is_fn, is_tp)
 
         if is_fp:
-            start_tag = '<abbr title="{}" style="background-color:{}"><s>'.format(entity['key'], sf_colors[entity['key']])
+            start_tag = '<abbr title="{} ({})" style="background-color:{}"><s>'.format(entity['key'], state_tag, sf_colors[entity['key']])
             end_tag = '</s></abbr>'
         else:
-            start_tag = '<abbr title="{}" style="background-color:{}">'.format(entity['key'], sf_colors[entity['key']])
+            start_tag = '<abbr title="{} ({})" style="background-color:{}">'.format(entity['key'], state_tag, sf_colors[entity['key']])
             end_tag = '</abbr>'
 
         entity_start = False
@@ -145,9 +160,9 @@ def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
         else:
             if len(entity['key']) > 0:
                 if is_fp:
-                    overlap_warning = '<abbr title="{}" style="background-color:{};"><s><b>&#x22C2;</b></s></abbr>'.format(entity['key'], sf_colors[entity['key']])
+                    overlap_warning = '<abbr title="{} ({})" style="background-color:{};"><s><b>&#x22C2;</b></s></abbr>'.format(entity['key'], state_tag, sf_colors[entity['key']])
                 else:
-                    overlap_warning = '<abbr title="{}" style="background-color:{};"><b>&#x22C2;</b></abbr>'.format(entity['key'], sf_colors[entity['key']])
+                    overlap_warning = '<abbr title="{} ({})" style="background-color:{};"><b>&#x22C2;</b></abbr>'.format(entity['key'], state_tag, sf_colors[entity['key']])
                 predicted_html = predicted_html[:int(last_start)] + overlap_warning + predicted_html[int(last_start):]
 
         last_start = entity_start or last_start
@@ -317,7 +332,15 @@ def get_predicted_html(config, rucksack, item, sf_colors):
     predicted_entities_html = ""
 
     for entity in list(reversed(predicted_entities)):
-        predicted_entities_html += '<p><span style="background-color:{background};"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}</p>'.format(**entity)
+
+        is_fp = False
+        entity_id = "{},{}".format(entity['start'], entity['end'])
+        is_fp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids'] else False
+        is_tp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids'] else False
+        is_fn = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids'] else False
+
+        state = get_state_tag(is_fp, is_fn, is_tp)
+        predicted_entities_html += '<p><span style="background-color:{background};"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state})</p>'.format(**entity, state=state)
 
     return predicted_html, predicted_entities_html
 
