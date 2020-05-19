@@ -12,8 +12,6 @@ item_header = """
             <button id="entities_button" class="btn btn-secondary active" type="button">Entities</button>
             <button id="types_button" class="btn btn-secondary" type="button">Types</button>
             <button id="results_button" class="btn btn-secondary" type="button">Results</button>
-            <button id="clusters_button" class="btn btn-secondary" type="button">Clusters</button>
-            <button id="errors_button" class="btn btn-secondary" type="button">Errors</button>
         </div>
 
     </div>
