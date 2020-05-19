@@ -2,12 +2,13 @@
 """
 from operator import itemgetter
 import os
+import hashlib
 
-from .templates.arrow_key_navigation import arrow_key_navigation as arrow_key_navigation_template
-from .templates.bootstrap_core_css import bootstrap_core_css as bootstrap_core_css_template
-from .templates.bootstrap_core_js import bootstrap_core_js as bootstrap_core_js_template
-from .templates.html_css import html_css as html_css_template
-from .templates.navigation_js import navigation_js as navigation_js_template
+from .templates.js_arrow_key_navigation import js_arrow_key_navigation as js_arrow_key_navigation_template
+from .templates.css_bootstrap import css_bootstrap as css_bootstrap_template
+from .templates.js_bootstrap import js_bootstrap as js_bootstrap_template
+from .templates.css_html import css_html as css_html_template
+from .templates.js_navigation import js_navigation as js_navigation_template
 
 from .templates.html_body import html_body as html_body_template
 from .templates.navigation import navigation as navigation_template
@@ -18,14 +19,119 @@ from .templates.gold_entities import gold_entities as gold_entities_template
 from .templates.predicted_corpus import predicted_corpus as predicted_corpus_template
 from .templates.predicted_entities import predicted_entities as predicted_entities_template
 
+from .templates.css_color import css_color as css_color_template
+from .templates.js_color import js_color as js_color_template
+from .templates.js_popper import js_popper as js_popper_template
 
-def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
+from .templates.js_dropdown import js_dropdown as js_dropdown_template
+from .templates.css_dropdown import css_dropdown as css_dropdown_template
+
+from orbis_plugin_aggregation_dbpedia_entity_types import Main as dbpedia_entity_types
+
+
+def get_hashid(url):
+    hashid = f"i{int(hashlib.md5(url.encode('utf-8')).hexdigest(), 16)}"
+    return hashid
+
+
+def get_color_css(sf_colors, type_colors, item, rucksack):
+    strings = set()
+    # print(item)
+
+    for entry in item['gold']:
+        # print(entry)
+        id_ = "{},{}".format(entry['start'], entry['end'])
+        hash = get_hashid(id_)
+        color = sf_colors[entry['key']]
+        strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+
+    for entry in item['computed']:
+        # print(entry)
+        id_ = "{},{}".format(entry['document_start'], entry['document_end'])
+        hash = get_hashid(id_)
+        color = sf_colors[entry['key']]
+        strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+
+    for entry in item['gold']:
+        id_ = "{},{}".format(entry['start'], entry['end'])
+        hash = get_hashid(id_)
+        entity_type = dbpedia_entity_types.normalize_entity_type(entry['type_url'])
+        color = type_colors[entity_type]
+        strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
+
+    for entry in item['computed']:
+        id_ = "{},{}".format(entry['document_start'], entry['document_end'])
+        hash = get_hashid(id_)
+        entity_type = dbpedia_entity_types.normalize_entity_type(entry['entity_type'])
+        color = type_colors[entity_type]
+        strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
+
+    found = []
+    classification_colors = {
+        "TP": "#00FF00",
+        "FP": "#FF00FF",
+        "FN": "#FF0000",
+    }
+    for computed_entry in item['computed']:
+
+        computed_entry_id = "{},{}".format(computed_entry['document_start'], computed_entry['document_end'])
+        classification = False
+        # print(rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids'])
+
+        fp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids']
+        tp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids']
+        fn_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids']
+
+        if computed_entry_id in fp_ids:
+            classification = "FP"
+        elif computed_entry_id in tp_ids:
+            classification = "TP"
+        elif computed_entry_id in fn_ids:
+            classification = "FN"
+        else:
+            pass
+            # print(f"{computed_entry_id} not in fp: {fp_ids} tp: {tp_ids} fn: {fn_ids}")
+
+        computed_hash = get_hashid(computed_entry_id)
+        color = classification_colors[classification]
+        strings.add(f'.results#{computed_hash} {{color: black; background-color: {color}}}')
+
+        for gold_entry in item['gold']:
+            gold_entry_id = "{},{}".format(gold_entry['start'], gold_entry['end'])
+
+            if gold_entry_id == computed_entry_id:
+                gold_hash = get_hashid(gold_entry_id)
+                color = classification_colors[classification]
+                strings.add(f'.results#{gold_hash} {{color: black; background-color: {color}}}')
+                found.append(gold_entry_id)
+                continue
+
+    for gold_entry in item["gold"]:
+        gold_entry_id = "{},{}".format(gold_entry['start'], gold_entry['end'])
+        gold_hash = get_hashid(gold_entry_id)
+        if gold_entry_id not in found:
+            color = "#808000"
+            # print("Not found found")
+            strings.add(f'.results#{gold_hash} {{color: black; background-color: {color}}}')
+
+    colors = "\n".join(list(strings))
+    return colors
+
+
+def get_type_coloring():
+    return ""
+
+
+def get_score_coloring():
+    return ""
+
+
+def get_gold_entities(rucksack, item, gold_html, entity_types=False):
     """Summary
 
     Args:
         rucksack (TYPE): Description
         item (TYPE): Description
-        sf_colors (TYPE): Description
         gold_html (TYPE): Description
         entity_types (bool, optional): Description
 
@@ -42,6 +148,7 @@ def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
     last_end = int(len(item['corpus']))
 
     for entity in sorted(item['gold'], key=itemgetter("end"), reverse=True):
+        entity_id = "{},{}".format(entity['start'], entity['end'])
 
         if (
             entity_types and
@@ -50,7 +157,8 @@ def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
         ):
             continue
 
-        start_tag = f'<abbr title="{entity["key"]}" style="background-color:{sf_colors[entity["key"]]};">'
+        hashid = f'{get_hashid(entity_id)}'
+        start_tag = f'<abbr title="{entity["key"]}" class="color entities" id="{hashid}">'
         end_tag = '</abbr>'
 
         entity_start = False
@@ -68,9 +176,9 @@ def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
             gold_html = gold_html[:int(entity['start'])] + start_tag + gold_html[int(entity['start']):]
         else:
             if len(entity['key']) > 0:
-                overlap_warning = '<abbr title="{}" style="background-color:{};"><b>&#x22C2;</b></abbr>'.format(
+                overlap_warning = '<abbr title="{}" class="color entities" id="{}"><b>&#x22C2;</b></abbr>'.format(
                     entity['key'],
-                    sf_colors[entity['key']]
+                    hashid
                 )
                 gold_html = gold_html[:int(last_start)] + overlap_warning + gold_html[int(last_start):]
 
@@ -83,7 +191,7 @@ def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
             "start": entity['start'],
             "end": entity['end'],
             "entity_type": entity['entity_type'],
-            "background": sf_colors[entity['key']]
+            "hashid": hashid
         })
 
     return gold_entities, gold_html
@@ -92,28 +200,26 @@ def get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types=False):
 def get_state_tag(is_fp, is_fn, is_tp):
     state_tag = ""
     if is_fp:
-        state_tag = "False Positive"
+        state_tag = "FP"
     elif is_fn:
-        state_tag = "False Negative"
+        state_tag = "FN"
     elif is_tp:
-        state_tag = "True Positive"
+        state_tag = "TP"
     return state_tag
 
 
-def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
+def get_predicted_entities(config, rucksack, item, predicted_html):
     """Summary
 
     Args:
         config (TYPE): Description
         rucksack (TYPE): Description
         item (TYPE): Description
-        sf_colors (TYPE): Description
         predicted_html (TYPE): Description
 
     Returns:
         TYPE: predicted_entities, predicted_html
     """
-
     predicted_entities = []
 
     if len(item['computed']) <= 0:
@@ -136,14 +242,17 @@ def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
         is_fn = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids'] else False
 
         state_tag = get_state_tag(is_fp, is_fn, is_tp)
+        hashid = get_hashid(entity_id)
+        # print(hashid)
 
         if is_fp:
-            start_tag = '<abbr title="{} ({})" style="background-color:{}"><s>'.format(entity['key'], state_tag, sf_colors[entity['key']])
-            end_tag = '</s></abbr>'
+            start_tag = '<s><abbr title="{} ({})" class="color entities" id="{}">'.format(entity['key'], state_tag, hashid)
+            end_tag = '</abbr></s>'
         else:
-            start_tag = '<abbr title="{} ({})" style="background-color:{}">'.format(entity['key'], state_tag, sf_colors[entity['key']])
+            start_tag = '<abbr title="{} ({})" class="color entities" id="{}">'.format(entity['key'], state_tag, hashid)
             end_tag = '</abbr>'
 
+        # print(start_tag)
         entity_start = False
         if int(entity['document_start']) <= int(last_start):
             if int(entity['document_start']) < int(last_end):
@@ -160,9 +269,9 @@ def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
         else:
             if len(entity['key']) > 0:
                 if is_fp:
-                    overlap_warning = '<abbr title="{} ({})" style="background-color:{};"><s><b>&#x22C2;</b></s></abbr>'.format(entity['key'], state_tag, sf_colors[entity['key']])
+                    overlap_warning = '<s><b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b></s>'.format(entity['key'], state_tag, hashid)
                 else:
-                    overlap_warning = '<abbr title="{} ({})" style="background-color:{};"><b>&#x22C2;</b></abbr>'.format(entity['key'], state_tag, sf_colors[entity['key']])
+                    overlap_warning = '<b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b>'.format(entity['key'], state_tag, hashid)
                 predicted_html = predicted_html[:int(last_start)] + overlap_warning + predicted_html[int(last_start):]
 
         last_start = entity_start or last_start
@@ -174,7 +283,8 @@ def get_predicted_entities(config, rucksack, item, sf_colors, predicted_html):
             "start": entity['document_start'],
             "end": entity['document_end'],
             "entity_type": entity['entity_type'],
-            "background": sf_colors[entity['key']]
+            "hashid": hashid,
+            "state_tag": state_tag
         })
 
     return predicted_entities, predicted_html
@@ -291,36 +401,34 @@ def get_item_header(rucksack, key):
     return header_html_0, header_html_1
 
 
-def get_gold_html(rucksack, item, sf_colors):
+def get_gold_html(rucksack, item):
     """Summary
 
     Args:
         rucksack (TYPE): Description
         item (TYPE): Description
-        sf_colors (TYPE): Description
 
     Returns:
         TYPE: Description
     """
     gold_html = item['corpus']
     entity_types = rucksack.result_summary(specific='binary_classification')['entities']
-    gold_entities, gold_html = get_gold_entities(rucksack, item, sf_colors, gold_html, entity_types)
+    gold_entities, gold_html = get_gold_entities(rucksack, item, gold_html, entity_types)
     gold_entities_html = ""
 
     for entity in list(reversed(gold_entities)):
-        gold_entities_html += '<p><span style="background-color:{background};"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}</p>'.format(**entity)
+        gold_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}</p>'.format(**entity)
 
     return gold_html, gold_entities_html
 
 
-def get_predicted_html(config, rucksack, item, sf_colors):
+def get_predicted_html(config, rucksack, item):
     """Summary
 
     Args:
         config (TYPE): Description
         rucksack (TYPE): Description
         item (TYPE): Description
-        sf_colors (TYPE): Description
 
     Returns:
         TYPE: Description
@@ -328,19 +436,14 @@ def get_predicted_html(config, rucksack, item, sf_colors):
 
     predicted_html = item['corpus']
     # logger.error(f"250: {item['computed']}")
-    predicted_entities, predicted_html = get_predicted_entities(config, rucksack, item, sf_colors, predicted_html)
+    predicted_entities, predicted_html = get_predicted_entities(config, rucksack, item, predicted_html)
     predicted_entities_html = ""
 
     for entity in list(reversed(predicted_entities)):
-
-        is_fp = False
-        entity_id = "{},{}".format(entity['start'], entity['end'])
-        is_fp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids'] else False
-        is_tp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids'] else False
-        is_fn = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids'] else False
-
-        state = get_state_tag(is_fp, is_fn, is_tp)
-        predicted_entities_html += '<p><span style="background-color:{background};"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state})</p>'.format(**entity, state=state)
+        if entity["state_tag"] == "FP":
+            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(**entity)
+        else:
+            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(**entity)
 
     return predicted_html, predicted_entities_html
 
@@ -387,7 +490,7 @@ def get_previous_button(key):
     return previous_button
 
 
-def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors):
+def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors):
     """Summary
 
     Args:
@@ -419,17 +522,20 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors):
         item_column_1=item_column_1
     )
 
-    gold_html, gold_entities_html = get_gold_html(rucksack, item, sf_colors)
+    gold_html, gold_entities_html = get_gold_html(rucksack, item)
     gold_corpus = gold_corpus_template.format(gold_html=gold_html)
     gold_entities = gold_entities_template.format(gold_entities_html=gold_entities_html)
 
-    predicted_html, predicted_entities_html = get_predicted_html(config, rucksack, item, sf_colors)
+    predicted_html, predicted_entities_html = get_predicted_html(config, rucksack, item)
     predicted_corpus = predicted_corpus_template.format(predicted_html=predicted_html)
     predicted_entities = predicted_entities_template.format(predicted_entities_html=predicted_entities_html)
 
     previous_button = get_previous_button(previous_item)
     next_button = get_next_button(next_item)
     navigation = navigation_template.format(prev=previous_button, next=next_button)
+
+    # color_css = color_css_template.format(get_color_css(sf_colors), get_type_coloring(), get_score_coloring())
+    color_css = css_color_template.format(get_color_css(sf_colors, type_colors, item, rucksack))
 
     html_item_dict = {
         'orbis_header': orbis_header,
@@ -439,11 +545,17 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors):
         'predicted_corpus': predicted_corpus,
         'predicted_entities': predicted_entities,
         'navigation': navigation,
-        'arrow_key_navigation': arrow_key_navigation_template,
-        'bootstrap_core_css': bootstrap_core_css_template,
-        'bootstrap_core_js': bootstrap_core_js_template,
-        'html_css': html_css_template,
-        'navigation_js': navigation_js_template
+        'js_arrow_key_navigation': js_arrow_key_navigation_template,
+        'css_bootstrap': css_bootstrap_template,
+        'js_bootstrap': js_bootstrap_template,
+        'css_html': css_html_template,
+        'js_navigation': js_navigation_template,
+        'css_color': color_css,
+        'js_color': js_color_template,
+        'js_popper': js_popper_template,
+        'js_dropdown': js_dropdown_template,
+        'css_dropdown': css_dropdown_template
+
     }
 
     return html_item_dict
@@ -462,7 +574,7 @@ def build_page(html_item_dict):
     return html
 
 
-def build(config, rucksack, item, next_item, previous_item, sf_colors):
+def build(config, rucksack, item, next_item, previous_item, sf_colors, type_colors):
     """Summary
 
     Args:
@@ -476,6 +588,6 @@ def build(config, rucksack, item, next_item, previous_item, sf_colors):
     Returns:
         TYPE: Description
     """
-    html_blocks = build_blocks(config, rucksack, item, next_item, previous_item, sf_colors)
+    html_blocks = build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors)
     html = build_page(html_blocks)
     return html, html_blocks

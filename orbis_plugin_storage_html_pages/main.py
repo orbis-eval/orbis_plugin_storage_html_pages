@@ -5,8 +5,8 @@ from orbis_eval.libs import files
 from .build_html import build as build_html
 
 from .libs import sort_queue
-from .libs import get_sf_colors
-from .libs import get_keys
+from .libs import get_colors
+from .libs import get_values
 
 import os
 
@@ -55,8 +55,10 @@ class Main(object):
             previous_item = previous_item if previous_item != item_key else None
 
             key = item['index']
-            sf_colors = get_sf_colors(get_keys(item))
-            html, html_blocks = build_html(config, rucksack, item, next_item, previous_item, sf_colors)
+            sf_colors = get_colors(get_values(item, "key"))
+            type_colors = get_colors(get_values(item, "entity_type"))
+            # print(type_colors)
+            html, html_blocks = build_html(config, rucksack, item, next_item, previous_item, sf_colors, type_colors)
 
             pages[key] = html_blocks
 

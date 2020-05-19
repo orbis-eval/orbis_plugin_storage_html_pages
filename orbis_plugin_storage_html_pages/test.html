@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Orbis-Eval</title>
+    
+    
+<!-- Bootstrap core CSS -->
+<link href="bootstrap.min.css" rel="stylesheet">
+
+    
+<style>
+    .dark-mode {
+      background-color: black;
+      color: white;
+    }
+
+    abbr.url#i10822007942589414018798672365162729441 {
+        background: green;
+    }
+
+    abbr.type#i10822007942589414018798672365162729441 {
+        background: blue;
+    }
+</style>
+
+</head>
+
+<body>
+    <main role="main">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1>Orbis</h1>
+                    <p><button id="darkmode_button" class="btn btn-secondary" role="button" style="float: right;"> dark mode </a></p>
+
+                    <p><button id="type_button" class="btn btn-secondary" role="button" style="float: right;"> type </a></p>
+
+                    <p><button id="url_button" class="btn btn-secondary" role="button" style="float: right;"> url </a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            
+            <!-- Example row of columns -->
+
+            <div class="row">
+                
+                <div class="col-md-12">
+                    <h2>Gold</h2>
+                    <p><abbr class="url" id="i10822007942589414018798672365162729441" title="http://aksw.org/notInWiki/Test">Test</abbr></p>
+                </div>
+
+
+            </div>
+
+            
+            </div>
+
+    </main>
+
+<script type="text/javascript">
+document.getElementById("darkmode_button").onclick = function() {
+    {
+        var element = document.body;
+        element.classList.toggle("dark-mode");
+    }
+}
+
+var className = "url"
+document.getElementById("type_button").onclick = function() {
+      var items = document.getElementsByClassName(className);
+      for (var i=0; i < items.length; i++) {
+        items[i].classList.replace(className, "type");
+      }
+      className = "type"
+    }
+
+document.getElementById("url_button").onclick = function() {
+      var items = document.getElementsByClassName(className);
+      for (var i=0; i < items.length; i++) {
+        items[i].classList.replace(className, "url");
+      }
+      className = "url"
+    }
+</script>
+
+
+</html>

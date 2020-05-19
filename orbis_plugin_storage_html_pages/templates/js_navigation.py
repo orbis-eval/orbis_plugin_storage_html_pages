@@ -1,4 +1,4 @@
-navigation_js = """
+js_navigation = """
 <script type="text/javascript">
 document.getElementById("jump_button").onclick = function() {
     {

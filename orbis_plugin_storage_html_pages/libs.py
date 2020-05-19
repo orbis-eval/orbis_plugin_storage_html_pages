@@ -16,23 +16,24 @@ def sort_queue(queue):
     return new_queue
 
 
-def get_keys(item):
+def get_values(entities, key):
     keys = set()
-    if item.get('gold'):
-        for entity in item['gold']:
-            keys.add(entity['key'])
+    if entities.get('gold'):
+        for entity in entities['gold']:
+            keys.add(entity[key])
 
-    if item.get('computed'):
-        for entity in item['computed']:
-            keys.add(entity['key'])
+    if entities.get('computed'):
+        for entity in entities['computed']:
+            keys.add(entity[key])
     return keys
 
 
-def get_sf_colors(keys):
+def get_colors(items):
 
-    sf_colors = {}
+    colors = {}
     colour_idx = 0
-    for sf in keys:
-        sf_colors[sf] = Tableau_20.hex_colors[colour_idx]
+    for sf in items:
+        colors[sf] = Tableau_20.hex_colors[colour_idx]
         colour_idx = 0 if colour_idx == 19 else colour_idx + 1
-    return sf_colors
+    return colors
+

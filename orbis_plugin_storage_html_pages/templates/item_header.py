@@ -1,8 +1,23 @@
 item_header = """
 <div class="row">
-    <div class="col-md-12">
-        <h2>Stats for Item {item_number}</h2>
+
+    <div class="col-md-9">
+        <h2>
+        Stats for Item {item_number}
+        </h2>
     </div>
+    <div class="col-md-3">
+
+        <div class="btn-group" role="group" aria-label="Color Modes">
+            <button id="entities_button" class="btn btn-secondary active" type="button">Entities</button>
+            <button id="types_button" class="btn btn-secondary" type="button">Types</button>
+            <button id="results_button" class="btn btn-secondary" type="button">Results</button>
+            <button id="clusters_button" class="btn btn-secondary" type="button">Clusters</button>
+            <button id="errors_button" class="btn btn-secondary" type="button">Errors</button>
+        </div>
+
+    </div>
+
     <div class="col-md-6">
         <p>{item_column_0}</p>
     </div>
