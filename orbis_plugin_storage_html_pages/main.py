@@ -8,8 +8,6 @@ from .libs import sort_queue
 from .libs import get_colors
 from .libs import get_values
 
-import os
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -23,18 +21,18 @@ class Main(object):
         self.config = self.rucksack.open['config']
         self.data = self.rucksack.open['data']
         self.pass_name = self.rucksack.open['config']['file_name'].split(".")[0]
-        self.folder = os.path.join(app.paths.output_path, "html_pages", self.pass_name)
+        self.folder = app.paths.output_path / "html_pages" / self.pass_name
         self.queue = sort_queue(self.rucksack.get_keys())
 
     def run(self):
         self.build(self.folder, self.queue, self.rucksack, self.config)
 
-    def build(self, folder, queue, rucksack, config):
+    def build(self, folder: Path, queue, rucksack, config):
 
         logger.info("Building HTML pages")
 
         timestamp = files.get_timestamp()
-        folder_dir = os.path.join(folder + f"-{timestamp}")
+        folder_dir = folder / f"-{timestamp}"
         files.create_folder(folder_dir)
         pages = {}
 
@@ -62,7 +60,7 @@ class Main(object):
 
             pages[key] = html_blocks
 
-            file_dir = os.path.join(folder_dir, str(key) + ".html")
+            file_dir = folder_dir / f"{str(key)}.html"
             logger.debug(file_dir)
 
             with open(file_dir, "w") as open_file:
