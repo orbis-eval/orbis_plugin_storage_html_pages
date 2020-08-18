@@ -27,7 +27,7 @@ class Main(object):
     def run(self):
         self.build(self.folder, self.queue, self.rucksack, self.config)
 
-    def build(self, folder: Path, queue, rucksack, config):
+    def build(self, folder, queue, rucksack, config):
 
         logger.info("Building HTML pages")
 
