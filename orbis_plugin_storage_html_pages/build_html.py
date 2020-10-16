@@ -75,7 +75,6 @@ def get_color_css(sf_colors, type_colors, item, rucksack):
     for computed_entry in item['computed']:
 
         computed_entry_id = "{},{}".format(computed_entry['document_start'], computed_entry['document_end'])
-        classification = False
         # print(rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids'])
 
         fp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids']
@@ -89,8 +88,8 @@ def get_color_css(sf_colors, type_colors, item, rucksack):
         elif computed_entry_id in fn_ids:
             classification = "FN"
         else:
-            pass
-            # print(f"{computed_entry_id} not in fp: {fp_ids} tp: {tp_ids} fn: {fn_ids}")
+            print(f"{computed_entry_id} not in fp: {fp_ids} tp: {tp_ids} fn: {fn_ids}")
+            continue
 
         computed_hash = get_hashid(computed_entry_id)
         color = classification_colors[classification]

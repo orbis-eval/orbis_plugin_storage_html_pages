@@ -66,5 +66,9 @@ input:checked + .slider:before {{
   border-radius: 50%;
 }}
 
+.text-column {{
+  word-break:break-all;
+}}
+
 </style>
 """
