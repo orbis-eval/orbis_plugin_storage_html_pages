@@ -36,21 +36,19 @@ def get_hashid(url):
 
 def get_color_css(sf_colors, type_colors, item, rucksack):
     strings = set()
-    # print(item)
 
     for entry in item['gold']:
-        # print(entry)
         id_ = "{},{}".format(entry['start'], entry['end'])
         hash = get_hashid(id_)
         color = sf_colors[entry['key']]
         strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
 
-    for entry in item['computed']:
-        # print(entry)
-        id_ = "{},{}".format(entry['document_start'], entry['document_end'])
-        hash = get_hashid(id_)
-        color = sf_colors[entry['key']]
-        strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+    if 'computed' in item and item['computed']:
+        for entry in item['computed']:
+            id_ = "{},{}".format(entry['document_start'], entry['document_end'])
+            hash = get_hashid(id_)
+            color = sf_colors[entry['key']]
+            strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
 
     for entry in item['gold']:
         id_ = "{},{}".format(entry['start'], entry['end'])
@@ -59,12 +57,13 @@ def get_color_css(sf_colors, type_colors, item, rucksack):
         color = type_colors[entity_type]
         strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
 
-    for entry in item['computed']:
-        id_ = "{},{}".format(entry['document_start'], entry['document_end'])
-        hash = get_hashid(id_)
-        entity_type = dbpedia_entity_types.normalize_entity_type(entry['entity_type'])
-        color = type_colors[entity_type]
-        strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
+    if 'computed' in item and item['computed']:
+        for entry in item['computed']:
+            id_ = "{},{}".format(entry['document_start'], entry['document_end'])
+            hash = get_hashid(id_)
+            entity_type = dbpedia_entity_types.normalize_entity_type(entry['entity_type'])
+            color = type_colors[entity_type]
+            strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
 
     found = []
     classification_colors = {
@@ -72,45 +71,44 @@ def get_color_css(sf_colors, type_colors, item, rucksack):
         "FP": "#FF00FF",
         "FN": "#FF0000",
     }
-    for computed_entry in item['computed']:
+    if 'computed' in item and item['computed']:
+        for computed_entry in item['computed']:
 
-        computed_entry_id = "{},{}".format(computed_entry['document_start'], computed_entry['document_end'])
-        # print(rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids'])
+            computed_entry_id = "{},{}".format(computed_entry['document_start'], computed_entry['document_end'])
 
-        fp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids']
-        tp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids']
-        fn_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids']
+            fp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids']
+            tp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids']
+            fn_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids']
 
-        if computed_entry_id in fp_ids:
-            classification = "FP"
-        elif computed_entry_id in tp_ids:
-            classification = "TP"
-        elif computed_entry_id in fn_ids:
-            classification = "FN"
-        else:
-            print(f"{computed_entry_id} not in fp: {fp_ids} tp: {tp_ids} fn: {fn_ids}")
-            continue
-
-        computed_hash = get_hashid(computed_entry_id)
-        color = classification_colors[classification]
-        strings.add(f'.results#{computed_hash} {{color: black; background-color: {color}}}')
-
-        for gold_entry in item['gold']:
-            gold_entry_id = "{},{}".format(gold_entry['start'], gold_entry['end'])
-
-            if gold_entry_id == computed_entry_id:
-                gold_hash = get_hashid(gold_entry_id)
-                color = classification_colors[classification]
-                strings.add(f'.results#{gold_hash} {{color: black; background-color: {color}}}')
-                found.append(gold_entry_id)
+            if computed_entry_id in fp_ids:
+                classification = "FP"
+            elif computed_entry_id in tp_ids:
+                classification = "TP"
+            elif computed_entry_id in fn_ids:
+                classification = "FN"
+            else:
+                print(f"{computed_entry_id} not in fp: {fp_ids} tp: {tp_ids} fn: {fn_ids}")
                 continue
+
+            computed_hash = get_hashid(computed_entry_id)
+            color = classification_colors[classification]
+            strings.add(f'.results#{computed_hash} {{color: black; background-color: {color}}}')
+
+            for gold_entry in item['gold']:
+                gold_entry_id = "{},{}".format(gold_entry['start'], gold_entry['end'])
+
+                if gold_entry_id == computed_entry_id:
+                    gold_hash = get_hashid(gold_entry_id)
+                    color = classification_colors[classification]
+                    strings.add(f'.results#{gold_hash} {{color: black; background-color: {color}}}')
+                    found.append(gold_entry_id)
+                    continue
 
     for gold_entry in item["gold"]:
         gold_entry_id = "{},{}".format(gold_entry['start'], gold_entry['end'])
         gold_hash = get_hashid(gold_entry_id)
         if gold_entry_id not in found:
             color = "#808000"
-            # print("Not found found")
             strings.add(f'.results#{gold_hash} {{color: black; background-color: {color}}}')
 
     colors = "\n".join(list(strings))
@@ -149,11 +147,7 @@ def get_gold_entities(rucksack, item, gold_html, entity_types=False):
     for entity in sorted(item['gold'], key=itemgetter("end"), reverse=True):
         entity_id = "{},{}".format(entity['start'], entity['end'])
 
-        if (
-            entity_types and
-            len(entity_types) > 0 and
-            entity['entity_type'] not in entity_types
-        ):
+        if entity_types and len(entity_types) > 0 and entity['entity_type'] not in entity_types:
             continue
 
         hashid = f'{get_hashid(entity_id)}'
@@ -161,12 +155,12 @@ def get_gold_entities(rucksack, item, gold_html, entity_types=False):
         end_tag = '</abbr>'
 
         entity_start = False
-        if int(entity['start']) <= int(last_start):
+        if entity['start'] and int(entity['start']) <= int(last_start):
             if int(entity['start']) < int(last_end):
                 entity_start = int(entity['start'])
 
         entity_end = False
-        if int(entity['end']) < int(last_end):
+        if entity['end'] and int(entity['end']) < int(last_end):
             if int(entity['end']) < int(last_start):
                 entity_end = int(entity['end'])
 
@@ -236,16 +230,23 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
 
         is_fp = False
         entity_id = "{},{}".format(entity['document_start'], entity['document_end'])
-        is_fp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fp_ids'] else False
-        is_tp = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids'] else False
-        is_fn = True if entity_id in rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids'] else False
+        is_fp = True if entity_id in \
+                        rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix'][
+                            'fp_ids'] else False
+        is_tp = True if entity_id in \
+                        rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix'][
+                            'tp_ids'] else False
+        is_fn = True if entity_id in \
+                        rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix'][
+                            'fn_ids'] else False
 
         state_tag = get_state_tag(is_fp, is_fn, is_tp)
         hashid = get_hashid(entity_id)
         # print(hashid)
 
         if is_fp:
-            start_tag = '<s><abbr title="{} ({})" class="color entities" id="{}">'.format(entity['key'], state_tag, hashid)
+            start_tag = '<s><abbr title="{} ({})" class="color entities" id="{}">'.format(entity['key'], state_tag,
+                                                                                          hashid)
             end_tag = '</abbr></s>'
         else:
             start_tag = '<abbr title="{} ({})" class="color entities" id="{}">'.format(entity['key'], state_tag, hashid)
@@ -263,14 +264,18 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
                 entity_end = int(entity['document_end'])
 
         if isinstance(entity_start, int) and entity_end:
-            predicted_html = predicted_html[:int(entity['document_end'])] + end_tag + predicted_html[int(entity['document_end']):]
-            predicted_html = predicted_html[:int(entity['document_start'])] + start_tag + predicted_html[int(entity['document_start']):]
+            predicted_html = predicted_html[:int(entity['document_end'])] + end_tag + predicted_html[
+                                                                                      int(entity['document_end']):]
+            predicted_html = predicted_html[:int(entity['document_start'])] + start_tag + predicted_html[int(
+                entity['document_start']):]
         else:
             if len(entity['key']) > 0:
                 if is_fp:
-                    overlap_warning = '<s><b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b></s>'.format(entity['key'], state_tag, hashid)
+                    overlap_warning = '<s><b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b></s>'.format(
+                        entity['key'], state_tag, hashid)
                 else:
-                    overlap_warning = '<b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b>'.format(entity['key'], state_tag, hashid)
+                    overlap_warning = '<b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b>'.format(
+                        entity['key'], state_tag, hashid)
                 predicted_html = predicted_html[:int(last_start)] + overlap_warning + predicted_html[int(last_start):]
 
         last_start = entity_start or last_start
@@ -299,41 +304,67 @@ def get_top_header(config, rucksack):
     Returns:
         TYPE: Description
     """
-    top_header_0 = {
-        "aggregator_name": config['aggregation']['service']['name'],
-        "aggregator_profile": config['aggregation']['service'].get("profile", "None"),
-        "aggregator_limit": config['aggregation']['service'].get("limit", "None"),
-        "aggregator_location": config['aggregation']['service']['location']
-    }
+    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+        top_header_0 = {
+            "aggregator_name": config['aggregation']['service']['name'],
+            "aggregator_profile": config['aggregation']['service'].get("profile", "None"),
+            "aggregator_limit": config['aggregation']['service'].get("limit", "None"),
+            "aggregator_location": config['aggregation']['service']['location']
+        }
 
-    top_header_1 = {
-        "aggregator_data_set": config['aggregation']['input']['data_set']['name'],
-        "evaluator_name": config['evaluation']['name'],
-        "scorer_name": config['scoring']['name'],
-        "entities": ", ".join([e for e in rucksack.result_summary(specific='binary_classification')['entities']])
-    }
+        top_header_1 = {
+            "aggregator_data_set": config['aggregation']['input']['data_set']['name'],
+            "evaluator_name": config['evaluation']['name'],
+            "scorer_name": config['scoring']['name'],
+            "entities": ", ".join([e for e in rucksack.result_summary(specific='binary_classification')['entities']])
+        }
 
-    top_header_2 = {
-        "has_score": rucksack.result_summary(specific='binary_classification')['has_score'],
-        "no_score": rucksack.result_summary(specific='binary_classification')['no_score'],
-        "empty_responses": rucksack.result_summary(specific='binary_classification')['empty_responses']
-    }
+        top_header_2 = {
+            "has_score": rucksack.result_summary(specific='binary_classification')['has_score'],
+            "no_score": rucksack.result_summary(specific='binary_classification')['no_score'],
+            "empty_responses": rucksack.result_summary(specific='binary_classification')['empty_responses']
+        }
 
-    micro_precision = f"{rucksack.result_summary(specific='binary_classification')['micro']['precision']:.3f}"
-    macro_precision = f"{rucksack.result_summary(specific='binary_classification')['macro']['precision']:.3f}"
-    micro_macro_precision = "(" + "/".join([str(micro_precision), str(macro_precision)]) + ")"
-    micro_recall = f"{rucksack.result_summary(specific='binary_classification')['micro']['recall']:.3f}"
-    macro_recall = f"{rucksack.result_summary(specific='binary_classification')['macro']['recall']:.3f}"
-    micro_macro_recall = "(" + "/".join([str(micro_recall), str(macro_recall)]) + ")"
-    micro_f1_score = f"{rucksack.result_summary(specific='binary_classification')['micro']['f1_score']:.3f}"
-    macro_f1_score = f"{rucksack.result_summary(specific='binary_classification')['macro']['f1_score']:.3f}"
-    micro_macro_f1_score = "(" + "/".join([str(micro_f1_score), str(macro_f1_score)]) + ")"
+        micro_precision = f"{rucksack.result_summary(specific='binary_classification')['micro']['precision']:.3f}"
+        macro_precision = f"{rucksack.result_summary(specific='binary_classification')['macro']['precision']:.3f}"
+        micro_macro_precision = "(" + "/".join([str(micro_precision), str(macro_precision)]) + ")"
+        micro_recall = f"{rucksack.result_summary(specific='binary_classification')['micro']['recall']:.3f}"
+        macro_recall = f"{rucksack.result_summary(specific='binary_classification')['macro']['recall']:.3f}"
+        micro_macro_recall = "(" + "/".join([str(micro_recall), str(macro_recall)]) + ")"
+        micro_f1_score = f"{rucksack.result_summary(specific='binary_classification')['micro']['f1_score']:.3f}"
+        macro_f1_score = f"{rucksack.result_summary(specific='binary_classification')['macro']['f1_score']:.3f}"
+        micro_macro_f1_score = "(" + "/".join([str(micro_f1_score), str(macro_f1_score)]) + ")"
 
-    top_header_3 = {
-        "precision": micro_macro_precision,
-        "recall": micro_macro_recall,
-        "f1_score": micro_macro_f1_score,
-    }
+        top_header_3 = {
+            "precision": micro_macro_precision,
+            "recall": micro_macro_recall,
+            "f1_score": micro_macro_f1_score,
+        }
+    else:
+        top_header_0 = {
+            "aggregator_name": None,
+            "aggregator_profile": None,
+            "aggregator_limit": None,
+            "aggregator_location": None
+        }
+
+        top_header_1 = {
+            "aggregator_data_set": None,
+            "evaluator_name": None,
+            "scorer_name": None,
+            "entities": None
+        }
+
+        top_header_2 = {
+            "has_score": None,
+            "no_score": None,
+            "empty_responses": None
+        }
+        top_header_3 = {
+            "precision": None,
+            "recall": None,
+            "f1_score": None
+        }
 
     header_html_0 = """
     <b>Aggregator Name:</b>\t{aggregator_name}</br>
@@ -364,7 +395,7 @@ def get_top_header(config, rucksack):
     return header_html_0, header_html_1, header_html_2, header_html_3
 
 
-def get_item_header(rucksack, key):
+def get_item_header(config, rucksack, key):
     """Summary
 
     Args:
@@ -374,17 +405,21 @@ def get_item_header(rucksack, key):
     Returns:
         TYPE: Description
     """
-    item_header_0 = {
-        "precision": rucksack.resultview(key, specific='binary_classification')['precision'],
-        "recall": rucksack.resultview(key, specific='binary_classification')['recall'],
-        "f1_score": rucksack.resultview(key, specific='binary_classification')['f1_score']
-    }
+    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+        item_header_0 = {
+            "precision": rucksack.resultview(key, specific='binary_classification')['precision'],
+            "recall": rucksack.resultview(key, specific='binary_classification')['recall'],
+            "f1_score": rucksack.resultview(key, specific='binary_classification')['f1_score']
+        }
 
-    item_header_1 = {
-        "tp": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['tp']),
-        "fp": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['fp']),
-        "fn": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['fn'])
-    }
+        item_header_1 = {
+            "tp": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['tp']),
+            "fp": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['fp']),
+            "fn": sum(rucksack.resultview(key, specific='binary_classification')['confusion_matrix']['fn'])
+        }
+    else:
+        item_header_0 = {"precision": 0, "recall": 0, "f1_score": 0}
+        item_header_1 = {"tp": None, "fp": None, "fn": None}
 
     header_html_0 = """
     <b>Precision:</b>\t{precision:.3f}</br>
@@ -400,7 +435,7 @@ def get_item_header(rucksack, key):
     return header_html_0, header_html_1
 
 
-def get_gold_html(rucksack, item):
+def get_gold_html(config, rucksack, item):
     """Summary
 
     Args:
@@ -411,12 +446,16 @@ def get_gold_html(rucksack, item):
         TYPE: Description
     """
     gold_html = item['corpus']
-    entity_types = rucksack.result_summary(specific='binary_classification')['entities']
+    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+        entity_types = rucksack.result_summary(specific='binary_classification')['entities']
+    else:
+        entity_types = False
     gold_entities, gold_html = get_gold_entities(rucksack, item, gold_html, entity_types)
     gold_entities_html = ""
 
     for entity in list(reversed(gold_entities)):
-        gold_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}</p>'.format(**entity)
+        gold_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}</p>'.format(
+            **entity)
 
     return gold_html, gold_entities_html
 
@@ -440,9 +479,11 @@ def get_predicted_html(config, rucksack, item):
 
     for entity in list(reversed(predicted_entities)):
         if entity["state_tag"] == "FP":
-            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(**entity)
+            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(
+                **entity)
         else:
-            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(**entity)
+            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(
+                **entity)
 
     return predicted_html, predicted_entities_html
 
@@ -514,20 +555,24 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
         orbis_column_3=orbis_column_3
     )
 
-    item_column_0, item_column_1 = get_item_header(rucksack, key)
+    item_column_0, item_column_1 = get_item_header(config, rucksack, key)
     item_header = item_header_template.format(
         item_number=key,
         item_column_0=item_column_0,
         item_column_1=item_column_1
     )
 
-    gold_html, gold_entities_html = get_gold_html(rucksack, item)
+    gold_html, gold_entities_html = get_gold_html(config, rucksack, item)
     gold_corpus = gold_corpus_template.format(gold_html=gold_html)
     gold_entities = gold_entities_template.format(gold_entities_html=gold_entities_html)
 
-    predicted_html, predicted_entities_html = get_predicted_html(config, rucksack, item)
-    predicted_corpus = predicted_corpus_template.format(predicted_html=predicted_html)
-    predicted_entities = predicted_entities_template.format(predicted_entities_html=predicted_entities_html)
+    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+        predicted_html, predicted_entities_html = get_predicted_html(config, rucksack, item)
+        predicted_corpus = predicted_corpus_template.format(predicted_html=predicted_html)
+        predicted_entities = predicted_entities_template.format(predicted_entities_html=predicted_entities_html)
+    else:
+        predicted_corpus = ""
+        predicted_entities = ""
 
     previous_button = get_previous_button(previous_item)
     next_button = get_next_button(next_item)
@@ -554,7 +599,6 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
         'js_popper': js_popper_template,
         'js_dropdown': js_dropdown_template,
         'css_dropdown': css_dropdown_template
-
     }
 
     return html_item_dict
