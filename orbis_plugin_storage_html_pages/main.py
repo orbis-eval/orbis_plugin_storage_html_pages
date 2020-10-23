@@ -73,25 +73,3 @@ class Main(object):
 
         logger.info("Finished building HTML pages")
         return pages
-
-    # @staticmethod
-    # def _add_annotation_items(annotation_colors, items):
-    #     if items:
-    #         for item in items:
-    #             for annotation in item["annotations"]:
-    #                 if annotation["type"] not in annotation_colors:
-    #                     annotation_colors[annotation["type"]] = set()
-    #                 annotation_colors[annotation["type"]].add(annotation["entity"])
-    #
-    # @staticmethod
-    # def _replace_with_colors(annotation_colors):
-    #     for annotation_type in annotation_colors.keys():
-    #         annotation_colors[annotation_type] = get_colors(annotation_colors[annotation_type])
-    #
-    # def _get_annotation_colors(self, gold_items, computed_items):
-    #     annotation_colors = {}
-    #     self._add_annotation_items(annotation_colors, gold_items)
-    #     self._add_annotation_items(annotation_colors, computed_items)
-    #     self._replace_with_colors(annotation_colors)
-    #
-    #     return annotation_colors
