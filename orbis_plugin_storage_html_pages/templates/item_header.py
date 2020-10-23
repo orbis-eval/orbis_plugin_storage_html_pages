@@ -11,7 +11,7 @@ item_header = """
         <div class="btn-group" role="group" aria-label="Color Modes">
             <button id="entities_button" class="btn btn-secondary active" type="button">Entities</button>
             <button id="types_button" class="btn btn-secondary" type="button">Types</button>
-            <button id="clustering_button" class="btn btn-secondary" type="button">Clustering</button>
+            <button id="cluster_button" class="btn btn-secondary" type="button">Cluster</button>
             <button id="results_button" class="btn btn-secondary" type="button">Results</button>
         </div>
 

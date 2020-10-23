@@ -34,7 +34,14 @@ def get_hashid(url):
     return hashid
 
 
-def get_color_css(sf_colors, type_colors, item, rucksack):
+def _add_annotation_colors(strings, hash_id, entry, annotations_colors):
+    if "annotations" in entry:
+        for annotation in entry["annotations"]:
+            color = annotations_colors[annotation["type"]][annotation["entity"]]
+            strings.add(f'.{annotation["type"]}#{hash_id} {{color: black; background-color: {color}}}')
+
+
+def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
     strings = set()
 
     for entry in item['gold']:
@@ -42,6 +49,7 @@ def get_color_css(sf_colors, type_colors, item, rucksack):
         hash = get_hashid(id_)
         color = sf_colors[entry['key']]
         strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+        _add_annotation_colors(strings, hash, entry, annotations_colors)
 
     if 'computed' in item and item['computed']:
         for entry in item['computed']:
@@ -49,6 +57,7 @@ def get_color_css(sf_colors, type_colors, item, rucksack):
             hash = get_hashid(id_)
             color = sf_colors[entry['key']]
             strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+            _add_annotation_colors(strings, hash, entry, annotations_colors)
 
     for entry in item['gold']:
         id_ = "{},{}".format(entry['start'], entry['end'])
@@ -530,7 +539,7 @@ def get_previous_button(key):
     return previous_button
 
 
-def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors):
+def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors, annotations_colors):
     """Summary
 
     Args:
@@ -540,6 +549,8 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
         next_item (TYPE): Description
         previous_item (TYPE): Description
         sf_colors (TYPE): Description
+        type_colors (TYPE): Description
+        annotations_colors (TYPE): Description
 
     Returns:
         TYPE: Description
@@ -579,7 +590,7 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
     navigation = navigation_template.format(prev=previous_button, next=next_button)
 
     # color_css = color_css_template.format(get_color_css(sf_colors), get_type_coloring(), get_score_coloring())
-    color_css = css_color_template.format(get_color_css(sf_colors, type_colors, item, rucksack))
+    color_css = css_color_template.format(get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack))
 
     html_item_dict = {
         'orbis_header': orbis_header,
@@ -617,7 +628,7 @@ def build_page(html_item_dict):
     return html
 
 
-def build(config, rucksack, item, next_item, previous_item, sf_colors, type_colors):
+def build(config, rucksack, item, next_item, previous_item, sf_colors, type_colors, annotations_colors):
     """Summary
 
     Args:
@@ -627,10 +638,13 @@ def build(config, rucksack, item, next_item, previous_item, sf_colors, type_colo
         next_item (TYPE): Description
         previous_item (TYPE): Description
         sf_colors (TYPE): Description
+        type_colors (TYPE): Description
+        annotations_colors (TYPE): Description
 
     Returns:
         TYPE: Description
     """
-    html_blocks = build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors)
+    html_blocks = build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors,
+                               annotations_colors)
     html = build_page(html_blocks)
     return html, html_blocks

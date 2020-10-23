@@ -7,10 +7,12 @@ from .build_html import build as build_html
 from .libs import sort_queue
 from .libs import get_colors
 from .libs import get_values
+from .libs import get_annotation_colors
 
 import os
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -57,8 +59,9 @@ class Main(object):
             key = item['index']
             sf_colors = get_colors(get_values(item, "key"))
             type_colors = get_colors(get_values(item, "entity_type"))
-            # print(type_colors)
-            html, html_blocks = build_html(config, rucksack, item, next_item, previous_item, sf_colors, type_colors)
+            annotations_colors = get_annotation_colors(item["gold"], item["computed"])
+            html, html_blocks = build_html(config, rucksack, item, next_item, previous_item, sf_colors, type_colors,
+                                           annotations_colors)
 
             pages[key] = html_blocks
 
@@ -70,3 +73,25 @@ class Main(object):
 
         logger.info("Finished building HTML pages")
         return pages
+
+    # @staticmethod
+    # def _add_annotation_items(annotation_colors, items):
+    #     if items:
+    #         for item in items:
+    #             for annotation in item["annotations"]:
+    #                 if annotation["type"] not in annotation_colors:
+    #                     annotation_colors[annotation["type"]] = set()
+    #                 annotation_colors[annotation["type"]].add(annotation["entity"])
+    #
+    # @staticmethod
+    # def _replace_with_colors(annotation_colors):
+    #     for annotation_type in annotation_colors.keys():
+    #         annotation_colors[annotation_type] = get_colors(annotation_colors[annotation_type])
+    #
+    # def _get_annotation_colors(self, gold_items, computed_items):
+    #     annotation_colors = {}
+    #     self._add_annotation_items(annotation_colors, gold_items)
+    #     self._add_annotation_items(annotation_colors, computed_items)
+    #     self._replace_with_colors(annotation_colors)
+    #
+    #     return annotation_colors

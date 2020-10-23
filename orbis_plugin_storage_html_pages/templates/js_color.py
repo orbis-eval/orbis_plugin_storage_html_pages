@@ -6,12 +6,12 @@ function removeClasses() {
   $('.color').removeClass('results');
   $('.color').removeClass('types');
   $('.color').removeClass('errors');
-  $('.color').removeClass('clusters');
+  $('.color').removeClass('Cluster');
   $('#entities_button').removeClass('active')
   $('#results_button').removeClass('active')
   $('#types_button').removeClass('active')
   $('#errors_button').removeClass('active')
-  $('#clusters_button').removeClass('active')
+  $('#cluster_button').removeClass('active')
 }
 
 document.getElementById("types_button").onclick = function() {
@@ -33,10 +33,10 @@ document.getElementById("results_button").onclick = function() {
       $('#results_button').addClass('active')
     }
 
-document.getElementById("clusters_button").onclick = function() {
+document.getElementById("cluster_button").onclick = function() {
       removeClasses()
-      $('.color').addClass('clusters');
-      $('#clusters_button').addClass('active')
+      $('.color').addClass('Cluster');
+      $('#cluster_button').addClass('active')
     }
 
 document.getElementById("errors_button").onclick = function() {
