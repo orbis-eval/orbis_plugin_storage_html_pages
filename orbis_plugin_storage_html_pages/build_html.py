@@ -539,6 +539,29 @@ def get_previous_button(key):
     return previous_button
 
 
+def get_js_annotation_code(annotations_colors):
+    remove_classes = []
+    click = []
+    for annotations_color in annotations_colors:
+        remove_active = f"$('#{annotations_color.lower()}_button').removeClass('active');\n"
+        remove_annotation_class = f"$('.color').removeClass('{annotations_color}');\n"
+        remove_classes.append(remove_active + remove_annotation_class)
+        button_action = f'document.getElementById("{annotations_color.lower()}_button").onclick = function() {{ \n' \
+                        f'removeClasses();\n $(\'.color\').addClass(\'{annotations_color}\') \n' \
+                        f'$(\'#{annotations_color.lower()}_button\').addClass(\'active\')}} '
+        click.append(button_action)
+
+    return ' '.join(remove_classes), ' '.join(click)
+
+
+def get_display_buttons(annotations_colors):
+    display_button = []
+    for annotations_color in annotations_colors:
+        display_button.append(f'<button id="{annotations_color.lower()}_button" class="btn btn-secondary" '
+                              f'type="button">{annotations_color}</button>')
+    return " ".join(display_button)
+
+
 def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors, annotations_colors):
     """Summary
 
@@ -567,8 +590,10 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
     )
 
     item_column_0, item_column_1 = get_item_header(config, rucksack, key)
+    display_buttons = get_display_buttons(annotations_colors)
     item_header = item_header_template.format(
         item_number=key,
+        display_buttons=display_buttons,
         item_column_0=item_column_0,
         item_column_1=item_column_1
     )
@@ -589,8 +614,9 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
     next_button = get_next_button(next_item)
     navigation = navigation_template.format(prev=previous_button, next=next_button)
 
-    # color_css = color_css_template.format(get_color_css(sf_colors), get_type_coloring(), get_score_coloring())
     color_css = css_color_template.format(get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack))
+
+    js_color = js_color_template.format(*get_js_annotation_code(annotations_colors))
 
     html_item_dict = {
         'orbis_header': orbis_header,
@@ -606,7 +632,7 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
         'css_html': css_html_template,
         'js_navigation': js_navigation_template,
         'css_color': color_css,
-        'js_color': js_color_template,
+        'js_color': js_color,
         'js_popper': js_popper_template,
         'js_dropdown': js_dropdown_template,
         'css_dropdown': css_dropdown_template
