@@ -28,17 +28,17 @@ html_body = """
     <main role="main" id="main">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-4">
                     <h1>Orbis</h1>
                 </div>
-                <div class="col-md-2">
-                  <p> Click to toggle dark mode </p>
-                </div>
-                <div class="col-md-2">
-                  <label class="switch">
-                    <input type="checkbox" onclick="darkLight()" id="checkBox" >
-                    <span class="slider"></span>
-                  </label>
+                <div class="col-md-8">
+                    <div class="switch-container">
+                      <div class="switch-description">Click to toggle dark mode</div>
+                      <label class="switch">
+                        <input type="checkbox" onclick="darkLight()" id="checkBox" >
+                        <span class="slider"></span>
+                      </label>
+                    </div>
                 </div>
             </div>
             {orbis_header}

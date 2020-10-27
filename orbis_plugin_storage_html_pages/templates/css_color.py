@@ -17,6 +17,18 @@ css_color = """
   align-self: center;
 }}
 
+.switch-container{{
+  float: right;
+  display: flex;
+  padding-top: 10px;
+}}
+
+.switch-container .switch-description{{
+  margin-top: 6px;
+  padding-right: 8px;
+  
+}}
+
 .switch input {{
   opacity: 0;
   width: 0;
@@ -68,6 +80,10 @@ input:checked + .slider:before {{
 
 .text-column {{
   word-break:break-all;
+}}
+
+.color-mode-container {{
+  float: right;
 }}
 
 </style>

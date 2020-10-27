@@ -8,7 +8,7 @@ item_header = """
     </div>
     <div class="col-md-3">
 
-        <div class="btn-group" role="group" aria-label="Color Modes">
+        <div class="btn-group color-mode-container" role="group" aria-label="Color Modes">
             <button id="entities_button" class="btn btn-secondary active" type="button">Entities</button>
             <button id="types_button" class="btn btn-secondary" type="button">Types</button>
             {display_buttons}
