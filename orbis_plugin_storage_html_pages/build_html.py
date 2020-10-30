@@ -78,7 +78,7 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
     classification_colors = {
         "TP": "#00FF00",
         "FP": "#FF00FF",
-        "FN": "#FF0000",
+        "FN": "#FF0000"
     }
     if 'computed' in item and item['computed']:
         for computed_entry in item['computed']:
@@ -313,7 +313,7 @@ def get_top_header(config, rucksack):
     Returns:
         TYPE: Description
     """
-    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+    if config['aggregation']['service']['name'] and config['evaluation']['name'] and config['scoring']['name']:
         top_header_0 = {
             "aggregator_name": config['aggregation']['service']['name'],
             "aggregator_profile": config['aggregation']['service'].get("profile", "None"),
@@ -414,7 +414,7 @@ def get_item_header(config, rucksack, key):
     Returns:
         TYPE: Description
     """
-    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+    if config['aggregation']['service']['name'] and config['evaluation']['name'] and config['scoring']['name']:
         item_header_0 = {
             "precision": rucksack.resultview(key, specific='binary_classification')['precision'],
             "recall": rucksack.resultview(key, specific='binary_classification')['recall'],
@@ -455,7 +455,7 @@ def get_gold_html(config, rucksack, item):
         TYPE: Description
     """
     gold_html = item['corpus']
-    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+    if config['aggregation']['service']['name'] and config['evaluation']['name'] and config['scoring']['name']:
         entity_types = rucksack.result_summary(specific='binary_classification')['entities']
     else:
         entity_types = False
@@ -602,7 +602,7 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
     gold_corpus = gold_corpus_template.format(gold_html=gold_html)
     gold_entities = gold_entities_template.format(gold_entities_html=gold_entities_html)
 
-    if config['aggregation']['service']['name'] and config['evaluation'] and config['scoring']:
+    if config['aggregation']['service']['name']:
         predicted_html, predicted_entities_html = get_predicted_html(config, rucksack, item)
         predicted_corpus = predicted_corpus_template.format(predicted_html=predicted_html)
         predicted_entities = predicted_entities_template.format(predicted_entities_html=predicted_entities_html)
