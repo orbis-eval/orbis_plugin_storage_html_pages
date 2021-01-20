@@ -26,7 +26,7 @@ from .templates.js_popper import js_popper as js_popper_template
 from .templates.js_dropdown import js_dropdown as js_dropdown_template
 from .templates.css_dropdown import css_dropdown as css_dropdown_template
 
-from orbis_plugin_aggregation_dbpedia_entity_types import Main as dbpedia_entity_types
+from orbis_eval.plugins.orbis_plugin_aggregation_dbpedia_entity_types import Main as dbpedia_entity_types
 
 
 def get_hashid(url):
