@@ -2,7 +2,9 @@
 """
 from operator import itemgetter
 import os
+import re
 import hashlib
+from inscriptis import get_text
 
 from .templates.js_arrow_key_navigation import js_arrow_key_navigation as js_arrow_key_navigation_template
 from .templates.css_bootstrap import css_bootstrap as css_bootstrap_template
@@ -559,6 +561,38 @@ def get_display_buttons(annotations_colors):
     return " ".join(display_button)
 
 
+def _prettify_with_inscriptis(html, text):
+    inscriptis_text = get_text(html)
+    text_split = text.split()
+    new_text = []
+    whitespace = re.split('([^\s]+)', inscriptis_text)
+    index_of_whitespace = 0
+    abbr_sequence = False
+    exact_match = True
+    for element in text_split:
+        new_text.append(element)
+        if not abbr_sequence and '<abbr' in element:
+            abbr_sequence = True
+            new_text.append(" ")
+        elif abbr_sequence and '>' in element:
+            exact_match = False
+            abbr_sequence = False
+        if not abbr_sequence:
+            for x in range(index_of_whitespace, index_of_whitespace + 20):
+                if (len(whitespace) > x) and ((whitespace[x] == element and exact_match) or
+                                              (whitespace[x] in element and not exact_match)):
+                    new_text.append(whitespace[x + 1])
+                    index_of_whitespace = x
+                    break
+        else:
+            new_text.append(" ")
+        if '</abbr>' in element:
+            new_text.append(" ")
+            exact_match = True
+            abbr_sequence = False
+    return "".join(new_text)
+
+
 def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, type_colors, annotations_colors):
     """Summary
 
@@ -596,11 +630,18 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
     )
 
     gold_html, gold_entities_html = get_gold_html(config, rucksack, item)
+    if "corpus_modified" in item:
+        gold_html = _prettify_with_inscriptis(item["corpus_modified"], gold_html)
+
     gold_corpus = gold_corpus_template.format(gold_html=gold_html)
     gold_entities = gold_entities_template.format(gold_entities_html=gold_entities_html)
 
     if config['aggregation']['service']['name']:
         predicted_html, predicted_entities_html = get_predicted_html(config, rucksack, item)
+
+        if "corpus_modified" in item:
+            predicted_html = _prettify_with_inscriptis(item["corpus_modified"], predicted_html)
+
         predicted_corpus = predicted_corpus_template.format(predicted_html=predicted_html)
         predicted_entities = predicted_entities_template.format(predicted_entities_html=predicted_entities_html)
     else:
