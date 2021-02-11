@@ -19,6 +19,7 @@ from .templates.gold_entities import gold_entities as gold_entities_template
 from .templates.predicted_corpus import predicted_corpus as predicted_corpus_template
 from .templates.predicted_entities import predicted_entities as predicted_entities_template
 
+from .templates.css_text_container import css_text_container as css_text_container_template
 from .templates.css_color import css_color as css_color_template
 from .templates.js_color import js_color as js_color_template
 from .templates.js_popper import js_popper as js_popper_template
@@ -627,6 +628,7 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
         'js_bootstrap': js_bootstrap_template,
         'css_html': css_html_template,
         'js_navigation': js_navigation_template,
+        'css_text_container': css_text_container_template,
         'css_color': color_css,
         'js_color': js_color,
         'js_popper': js_popper_template,

@@ -14,6 +14,7 @@ html_body = """
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
     {css_color}
+    {css_text_container}
     {css_dropdown}
         <style>
 
@@ -49,7 +50,7 @@ html_body = """
             {navigation}
             <!-- Example row of columns -->
 
-            <div class="row">
+            <div class="row text-container">
                 {gold_corpus}
                 {predicted_corpus}
             </div>
