@@ -79,7 +79,7 @@ input:checked + .slider:before {{
 }}
 
 .text-column {{
-  word-break:break-all;
+  overflow-wrap: break-word;
 }}
 
 .color-mode-container {{
