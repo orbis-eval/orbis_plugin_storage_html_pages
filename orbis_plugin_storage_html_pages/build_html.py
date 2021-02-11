@@ -26,8 +26,6 @@ from .templates.js_popper import js_popper as js_popper_template
 from .templates.js_dropdown import js_dropdown as js_dropdown_template
 from .templates.css_dropdown import css_dropdown as css_dropdown_template
 
-from orbis_eval.plugins.aggregation.dbpedia_entity_types import Main as dbpedia_entity_types
-
 
 def get_hashid(url):
     hashid = f"i{int(hashlib.md5(url.encode('utf-8')).hexdigest(), 16)}"
@@ -62,16 +60,14 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
     for entry in item['gold']:
         id_ = "{},{}".format(entry['start'], entry['end'])
         hash = get_hashid(id_)
-        entity_type = dbpedia_entity_types.normalize_entity_type(entry['type_url'])
-        color = type_colors[entity_type]
+        color = type_colors[entry['type_url']]
         strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
 
     if 'computed' in item and item['computed']:
         for entry in item['computed']:
             id_ = "{},{}".format(entry['document_start'], entry['document_end'])
             hash = get_hashid(id_)
-            entity_type = dbpedia_entity_types.normalize_entity_type(entry['entity_type'])
-            color = type_colors[entity_type]
+            color = type_colors[entry['entity_type']]
             strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
 
     found = []
