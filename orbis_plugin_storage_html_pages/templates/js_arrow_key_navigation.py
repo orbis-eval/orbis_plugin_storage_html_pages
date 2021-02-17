@@ -24,5 +24,17 @@ $(document).ready(function() {
         prevUrl = prevPage.attr("href")
     }
 });
+
+$(document).ready(function() {
+    var textContainer = document.getElementById("text-container");
+    if (textContainer.clientHeight >= textContainer.scrollHeight)
+        $(".show-more-button").addClass('hide')
+});
+
+function showMore() {{
+    $('#text-container').addClass('show-all')
+    $(".show-more-button").addClass('hide')
+}}
+
 </script>
 """

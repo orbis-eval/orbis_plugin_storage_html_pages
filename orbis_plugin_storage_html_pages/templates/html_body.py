@@ -50,10 +50,11 @@ html_body = """
             {navigation}
             <!-- Example row of columns -->
 
-            <div class="row text-container">
+            <div class="row" id="text-container">
                 {gold_corpus}
                 {predicted_corpus}
             </div>
+            <button onclick="showMore()" class="btn btn-secondary show-more-button" type="button">Show More</button>
 
             <div class="row">
                 {gold_entities}
