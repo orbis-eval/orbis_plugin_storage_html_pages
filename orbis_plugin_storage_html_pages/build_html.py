@@ -579,7 +579,7 @@ def _prettify_with_inscriptis(html, text):
             abbr_sequence = False
         if not abbr_sequence:
             for x in range(index_of_whitespace, index_of_whitespace + 20):
-                if (len(whitespace) > x) and ((whitespace[x] == element and exact_match) or
+                if (len(whitespace) > x + 1) and ((whitespace[x] == element and exact_match) or
                                               (whitespace[x] in element and not exact_match)):
                     new_text.append(whitespace[x + 1])
                     index_of_whitespace = x
