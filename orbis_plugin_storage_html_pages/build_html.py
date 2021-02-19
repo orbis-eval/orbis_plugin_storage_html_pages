@@ -63,7 +63,7 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
     for entry in item['gold']:
         id_ = "{},{}".format(entry['start'], entry['end'])
         hash = get_hashid(id_)
-        color = type_colors[entry['type_url']]
+        color = type_colors[entry['entity_type']]
         strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
 
     if 'computed' in item and item['computed']:
@@ -630,7 +630,7 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
     )
 
     gold_html, gold_entities_html = get_gold_html(config, rucksack, item)
-    if "corpus_modified" in item:
+    if "corpus_modified" in item and item["corpus_modified"]:
         gold_html = _prettify_with_inscriptis(item["corpus_modified"], gold_html)
 
     gold_corpus = gold_corpus_template.format(gold_html=gold_html)
@@ -639,7 +639,7 @@ def build_blocks(config, rucksack, item, next_item, previous_item, sf_colors, ty
     if config['aggregation']['service']['name']:
         predicted_html, predicted_entities_html = get_predicted_html(config, rucksack, item)
 
-        if "corpus_modified" in item:
+        if "corpus_modified" in item and item["corpus_modified"]:
             predicted_html = _prettify_with_inscriptis(item["corpus_modified"], predicted_html)
 
         predicted_corpus = predicted_corpus_template.format(predicted_html=predicted_html)
