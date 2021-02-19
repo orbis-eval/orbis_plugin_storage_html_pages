@@ -186,14 +186,18 @@ def get_gold_entities(rucksack, item, gold_html, entity_types=False):
         last_start = entity_start or last_start
         last_end = entity_end or last_end
 
-        gold_entities.append({
+        gold_entity = {
             "surfaceForm": entity['surfaceForm'],
             "key": entity['key'],
             "start": entity['start'],
             "end": entity['end'],
             "entity_type": entity['entity_type'],
             "hashid": hashid
-        })
+        }
+
+        if 'annotations' in entity:
+            gold_entity['annotations'] = entity['annotations']
+        gold_entities.append(gold_entity)
 
     return gold_entities, gold_html
 
@@ -289,7 +293,7 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
         last_start = entity_start or last_start
         last_end = entity_end or last_end
 
-        predicted_entities.append({
+        predicted_entity = {
             "surfaceForm": entity['surfaceForm'],
             "key": entity['key'],
             "start": entity['document_start'],
@@ -297,7 +301,12 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
             "entity_type": entity['entity_type'],
             "hashid": hashid,
             "state_tag": state_tag
-        })
+        }
+
+        if 'annotations' in entity:
+            predicted_entity['annotations'] = entity['annotations']
+
+        predicted_entities.append(predicted_entity)
 
     return predicted_entities, predicted_html
 
@@ -462,10 +471,19 @@ def get_gold_html(config, rucksack, item):
     gold_entities_html = ""
 
     for entity in list(reversed(gold_entities)):
-        gold_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}</p>'.format(
+        entity["annotations_string"] = get_annotations_string(entity)
+        gold_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string}</p>'.format(
             **entity)
 
     return gold_html, gold_entities_html
+
+
+def get_annotations_string(entity):
+    annotations = ""
+    if "annotations" in entity:
+        for annotation in entity["annotations"]:
+            annotations += f": {annotation['type']} -> {annotation['entity']}"
+    return annotations
 
 
 def get_predicted_html(config, rucksack, item):
@@ -486,11 +504,13 @@ def get_predicted_html(config, rucksack, item):
     predicted_entities_html = ""
 
     for entity in list(reversed(predicted_entities)):
+        entity["annotations_string"] = get_annotations_string(entity)
+
         if entity["state_tag"] == "FP":
-            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(
+            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string} ({state_tag})</p>'.format(
                 **entity)
         else:
-            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type} ({state_tag})</p>'.format(
+            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string} ({state_tag})</p>'.format(
                 **entity)
 
     return predicted_html, predicted_entities_html
@@ -580,7 +600,7 @@ def _prettify_with_inscriptis(html, text):
         if not abbr_sequence:
             for x in range(index_of_whitespace, index_of_whitespace + 20):
                 if (len(whitespace) > x + 1) and ((whitespace[x] == element and exact_match) or
-                                              (whitespace[x] in element and not exact_match)):
+                                                  (whitespace[x] in element and not exact_match)):
                     new_text.append(whitespace[x + 1])
                     index_of_whitespace = x
                     break
