@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 __name__ = "orbis_plugin_storage_html_pages"
-__version__ = "2.3.0"
+__version__ = "2.3.1"
 __author__ = "fabod, Roger Waldvogel"
 __year__ = "2021"
 __description__ = "The html_pages storage plugin for Orbis"
