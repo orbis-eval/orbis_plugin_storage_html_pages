@@ -2,8 +2,8 @@
 
 __name__ = "orbis_plugin_storage_html_pages"
 __version__ = "2.3.0"
-__author__ = "fabod"
-__year__ = "2019"
+__author__ = "fabod, Roger Waldvogel"
+__year__ = "2021"
 __description__ = "The html_pages storage plugin for Orbis"
 __license__ = "GPL2"
 __min_python_version__ = "3.6"
