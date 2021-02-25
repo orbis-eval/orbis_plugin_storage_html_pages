@@ -1,6 +1,6 @@
 predicted_entities = """
-<div class="col-md-6">
+<div class="col-md-6 computed">
     <h2>Predicted Entities</h2>
-    <p class="computed">{predicted_entities_html}</p>
+    <p>{predicted_entities_html}</p>
 </div>
 """
