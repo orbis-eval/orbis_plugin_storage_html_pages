@@ -35,11 +35,11 @@ def get_hashid(url):
     return hashid
 
 
-def _add_annotation_colors(strings, hash_id, entry, annotations_colors):
+def _add_annotation_colors(strings, hash_id, entry, annotations_colors, parent_class):
     if "annotations" in entry:
         for annotation in entry["annotations"]:
             color = annotations_colors[annotation["type"]][annotation["entity"]]
-            strings.add(f'.{annotation["type"]}#{hash_id} {{color: black; background-color: {color}}}')
+            strings.add(f'.{parent_class} .{annotation["type"]}#{hash_id} {{color: black; background-color: {color}}}')
 
 
 def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
@@ -51,7 +51,7 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
             hash = get_hashid(id_)
             color = sf_colors[entry['key']]
             strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
-            _add_annotation_colors(strings, hash, entry, annotations_colors)
+            _add_annotation_colors(strings, hash, entry, annotations_colors, 'gold')
 
     if 'computed' in item and item['computed']:
         for entry in item['computed']:
@@ -59,7 +59,7 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
             hash = get_hashid(id_)
             color = sf_colors[entry['key']]
             strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
-            _add_annotation_colors(strings, hash, entry, annotations_colors)
+            _add_annotation_colors(strings, hash, entry, annotations_colors, 'computed')
 
     if item['gold']:
         for entry in item['gold']:
