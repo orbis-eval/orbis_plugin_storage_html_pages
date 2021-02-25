@@ -45,12 +45,13 @@ def _add_annotation_colors(strings, hash_id, entry, annotations_colors):
 def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
     strings = set()
 
-    for entry in item['gold']:
-        id_ = "{},{}".format(entry['start'], entry['end'])
-        hash = get_hashid(id_)
-        color = sf_colors[entry['key']]
-        strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
-        _add_annotation_colors(strings, hash, entry, annotations_colors)
+    if item['gold']:
+        for entry in item['gold']:
+            id_ = "{},{}".format(entry['start'], entry['end'])
+            hash = get_hashid(id_)
+            color = sf_colors[entry['key']]
+            strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+            _add_annotation_colors(strings, hash, entry, annotations_colors)
 
     if 'computed' in item and item['computed']:
         for entry in item['computed']:
@@ -60,11 +61,12 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
             strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
             _add_annotation_colors(strings, hash, entry, annotations_colors)
 
-    for entry in item['gold']:
-        id_ = "{},{}".format(entry['start'], entry['end'])
-        hash = get_hashid(id_)
-        color = type_colors[entry['entity_type']]
-        strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
+    if item['gold']:
+        for entry in item['gold']:
+            id_ = "{},{}".format(entry['start'], entry['end'])
+            hash = get_hashid(id_)
+            color = type_colors[entry['entity_type']]
+            strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
 
     if 'computed' in item and item['computed']:
         for entry in item['computed']:
@@ -112,12 +114,13 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
                     found.append(gold_entry_id)
                     continue
 
-    for gold_entry in item["gold"]:
-        gold_entry_id = "{},{}".format(gold_entry['start'], gold_entry['end'])
-        gold_hash = get_hashid(gold_entry_id)
-        if gold_entry_id not in found:
-            color = "#808000"
-            strings.add(f'.results#{gold_hash} {{color: black; background-color: {color}}}')
+    if item['gold']:
+        for gold_entry in item["gold"]:
+            gold_entry_id = "{},{}".format(gold_entry['start'], gold_entry['end'])
+            gold_hash = get_hashid(gold_entry_id)
+            if gold_entry_id not in found:
+                color = "#808000"
+                strings.add(f'.results#{gold_hash} {{color: black; background-color: {color}}}')
 
     colors = "\n".join(list(strings))
     return colors
@@ -152,7 +155,7 @@ def get_gold_entities(rucksack, item, gold_html, entity_types=False):
     last_start = int(len(item['corpus']))
     last_end = int(len(item['corpus']))
 
-    for entity in sorted(item['gold'], key=itemgetter("end"), reverse=True):
+    for entity in sorted(item['gold'], key=lambda x: int(x['end']), reverse=True):
         entity_id = "{},{}".format(entity['start'], entity['end'])
 
         if entity_types and len(entity_types) > 0 and entity['entity_type'] not in entity_types:
@@ -234,7 +237,7 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
     last_end = len(item['corpus'])
 
     # logger.error(f"84: {item['computed']}")
-    for e_idx, entity in enumerate(sorted(item['computed'], key=itemgetter("document_end"), reverse=True)):
+    for e_idx, entity in enumerate(sorted(item['computed'], key=lambda x: int(x['document_end']), reverse=True)):
         entity_types = config['scoring'].get('entities', [])
 
         if entity['entity_type'] not in entity_types and len(entity_types) > 0:
