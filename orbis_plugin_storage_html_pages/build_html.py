@@ -1,6 +1,5 @@
 """Summary
 """
-from operator import itemgetter
 import os
 import re
 import hashlib
@@ -50,7 +49,7 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
             id_ = "{},{}".format(entry['start'], entry['end'])
             hash = get_hashid(id_)
             color = sf_colors[entry['key']]
-            strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+            strings.add(f'.gold .entities#{hash} {{color: black; background-color: {color}}}')
             _add_annotation_colors(strings, hash, entry, annotations_colors, 'gold')
 
     if 'computed' in item and item['computed']:
@@ -58,7 +57,7 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
             id_ = "{},{}".format(entry['document_start'], entry['document_end'])
             hash = get_hashid(id_)
             color = sf_colors[entry['key']]
-            strings.add(f'.entities#{hash} {{color: black; background-color: {color}}}')
+            strings.add(f'.computed .entities#{hash} {{color: black; background-color: {color}}}')
             _add_annotation_colors(strings, hash, entry, annotations_colors, 'computed')
 
     if item['gold']:
@@ -66,14 +65,14 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
             id_ = "{},{}".format(entry['start'], entry['end'])
             hash = get_hashid(id_)
             color = type_colors[entry['entity_type']]
-            strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
+            strings.add(f'.gold .types#{hash} {{color: black; background-color: {color}}}')
 
     if 'computed' in item and item['computed']:
         for entry in item['computed']:
             id_ = "{},{}".format(entry['document_start'], entry['document_end'])
             hash = get_hashid(id_)
             color = type_colors[entry['entity_type']]
-            strings.add(f'.types#{hash} {{color: black; background-color: {color}}}')
+            strings.add(f'.computed .types#{hash} {{color: black; background-color: {color}}}')
 
     found = []
     classification_colors = {
@@ -90,10 +89,10 @@ def get_color_css(sf_colors, type_colors, annotations_colors, item, rucksack):
             tp_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['tp_ids']
             fn_ids = rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix']['fn_ids']
 
-            if computed_entry_id in fp_ids:
-                classification = "FP"
-            elif computed_entry_id in tp_ids:
+            if computed_entry_id in tp_ids:
                 classification = "TP"
+            elif computed_entry_id in fp_ids:
+                classification = "FP"
             elif computed_entry_id in fn_ids:
                 classification = "FN"
             else:
@@ -207,12 +206,12 @@ def get_gold_entities(rucksack, item, gold_html, entity_types=False):
 
 def get_state_tag(is_fp, is_fn, is_tp):
     state_tag = ""
-    if is_fp:
+    if is_tp:
+        state_tag = "TP"
+    elif is_fp:
         state_tag = "FP"
     elif is_fn:
         state_tag = "FN"
-    elif is_tp:
-        state_tag = "TP"
     return state_tag
 
 
@@ -236,14 +235,12 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
     last_start = len(item['corpus'])
     last_end = len(item['corpus'])
 
-    # logger.error(f"84: {item['computed']}")
     for e_idx, entity in enumerate(sorted(item['computed'], key=lambda x: int(x['document_end']), reverse=True)):
         entity_types = config['scoring'].get('entities', [])
 
         if entity['entity_type'] not in entity_types and len(entity_types) > 0:
             continue
 
-        is_fp = False
         entity_id = "{},{}".format(entity['document_start'], entity['document_end'])
         is_fp = True if entity_id in \
                         rucksack.resultview(item['index'], specific="binary_classification")['confusion_matrix'][
@@ -257,9 +254,8 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
 
         state_tag = get_state_tag(is_fp, is_fn, is_tp)
         hashid = get_hashid(entity_id)
-        # print(hashid)
 
-        if is_fp:
+        if is_fp and not is_tp:
             start_tag = '<s><abbr title="{} ({})" class="color entities" id="{}">'.format(entity['key'], state_tag,
                                                                                           hashid)
             end_tag = '</abbr></s>'
@@ -267,7 +263,6 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
             start_tag = '<abbr title="{} ({})" class="color entities" id="{}">'.format(entity['key'], state_tag, hashid)
             end_tag = '</abbr>'
 
-        # print(start_tag)
         entity_start = False
         if int(entity['document_start']) <= int(last_start):
             if int(entity['document_start']) < int(last_end):
@@ -285,7 +280,7 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
                 entity['document_start']):]
         else:
             if len(entity['key']) > 0:
-                if is_fp:
+                if is_fp and not is_tp:
                     overlap_warning = '<s><b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b></s>'.format(
                         entity['key'], state_tag, hashid)
                 else:
@@ -513,7 +508,7 @@ def get_predicted_html(config, rucksack, item):
             predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string} ({state_tag})</p>'.format(
                 **entity)
         else:
-            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string} ({state_tag})</p>'.format(
+            predicted_entities_html += '<p><span class="color  entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string} ({state_tag})</p>'.format(
                 **entity)
 
     return predicted_html, predicted_entities_html
@@ -594,10 +589,11 @@ def _prettify_with_inscriptis(html, text):
     exact_match = True
     for element in text_split:
         new_text.append(element)
-        if not abbr_sequence and '<abbr' in element:
+        if '<abbr' in element:
             abbr_sequence = True
+            exact_match = True
             new_text.append(" ")
-        elif abbr_sequence and '>' in element:
+        elif abbr_sequence and '">' in element:
             exact_match = False
             abbr_sequence = False
         if not abbr_sequence:
@@ -607,9 +603,10 @@ def _prettify_with_inscriptis(html, text):
                     new_text.append(whitespace[x + 1])
                     index_of_whitespace = x
                     break
+            new_text.append(" ")
         else:
             new_text.append(" ")
-        if '</abbr>' in element:
+        if '</abbr>' in element and not element.find("<abbr") > element.find("</abbr>"):
             new_text.append(" ")
             exact_match = True
             abbr_sequence = False
