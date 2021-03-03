@@ -597,17 +597,21 @@ def _prettify_with_inscriptis(html, text):
             exact_match = False
             abbr_sequence = False
         if not abbr_sequence:
+            whitespace_found = False
             for x in range(index_of_whitespace, index_of_whitespace + 20):
                 if (len(whitespace) > x + 1) and ((whitespace[x] == element and exact_match) or
-                                                  (whitespace[x] in element and not exact_match)):
+                                                  (any(y for y in whitespace[x].split('-') if
+                                                       y.replace(',', '').replace('.', '').replace(':', '') in element)
+                                                   and not exact_match)):
                     new_text.append(whitespace[x + 1])
                     index_of_whitespace = x
+                    whitespace_found = True
                     break
-            new_text.append(" ")
+            if not whitespace_found:
+                new_text.append(" ")
         else:
             new_text.append(" ")
         if '</abbr>' in element and not element.find("<abbr") > element.find("</abbr>"):
-            new_text.append(" ")
             exact_match = True
             abbr_sequence = False
     return "".join(new_text)
