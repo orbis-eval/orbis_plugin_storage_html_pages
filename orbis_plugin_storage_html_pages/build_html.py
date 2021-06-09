@@ -269,8 +269,8 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
                 entity_start = int(entity['document_start'])
 
         entity_end = False
-        if int(entity['document_end']) < int(last_end):
-            if int(entity['document_end']) < int(last_start):
+        if int(entity['document_end']) <= int(last_end):
+            if int(entity['document_end']) <= int(last_start):
                 entity_end = int(entity['document_end'])
 
         if isinstance(entity_start, int) and entity_end:
