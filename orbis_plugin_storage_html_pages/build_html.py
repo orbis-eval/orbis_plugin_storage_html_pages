@@ -1,9 +1,9 @@
 """Summary
 """
 import os
-import re
 import hashlib
-from inscriptis import get_text
+
+from .annotation_entities import get_all_entities_of_annotation
 
 from .templates.js_arrow_key_navigation import js_arrow_key_navigation as js_arrow_key_navigation_template
 from .templates.css_bootstrap import css_bootstrap as css_bootstrap_template
@@ -281,10 +281,12 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
         else:
             if len(entity['key']) > 0:
                 if is_fp and not is_tp:
-                    overlap_warning = '<s><b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b></s>'.format(
+                    overlap_warning = '<s><b><abbr title="{} ({})" class="color entities" id="{' \
+                                      '}">&#x22C2;</abbr></b></s>'.format(
                         entity['key'], state_tag, hashid)
                 else:
-                    overlap_warning = '<b><abbr title="{} ({})" class="color entities" id="{}">&#x22C2;</abbr></b>'.format(
+                    overlap_warning = '<b><abbr title="{} ({})" class="color entities" id="{' \
+                                      '}">&#x22C2;</abbr></b>'.format(
                         entity['key'], state_tag, hashid)
                 predicted_html = predicted_html[:int(last_start)] + overlap_warning + predicted_html[int(last_start):]
 
@@ -319,6 +321,7 @@ def get_top_header(config, rucksack):
     Returns:
         TYPE: Description
     """
+    annotations = {}
     if config['aggregation']['service']['name'] and config['evaluation']['name'] and config['scoring']['name']:
         top_header_0 = {
             "aggregator_name": config['aggregation']['service']['name'],
@@ -333,6 +336,10 @@ def get_top_header(config, rucksack):
             "scorer_name": config['scoring']['name'],
             "entities": ", ".join([e for e in rucksack.result_summary(specific='binary_classification')['entities']])
         }
+
+        annotations = get_all_entities_of_annotation(rucksack.open)
+        for annotation_type in annotations:
+            top_header_1[annotation_type] = ", ".join(annotations[annotation_type])
 
         top_header_2 = {
             "has_score": rucksack.result_summary(specific='binary_classification')['has_score'],
@@ -388,12 +395,7 @@ def get_top_header(config, rucksack):
     <b>Aggregator Service:</b>\t{aggregator_name}</br>
     """.format(**top_header_0)
 
-    header_html_1 = """
-    <b>Aggregator Dataset:</b>\t{aggregator_data_set}</br>
-    <b>Evaluator Name:</b>\t{evaluator_name}</br>
-    <b>Scorer Name:</b>\t{scorer_name}</br>
-    <b>Entities:</b>\t{entities}</br>
-    """.format(**top_header_1)
+    header_html_1 = f" {_get_html_header_1(annotations)}".format(**top_header_1)
 
     header_html_2 = """
     <b>Some Score:</b>\t{has_score}</br>
@@ -408,6 +410,16 @@ def get_top_header(config, rucksack):
     """.format(**top_header_3)
 
     return header_html_0, header_html_1, header_html_2, header_html_3
+
+
+def _get_html_header_1(annotations):
+    header_1 = """<b>Aggregator Dataset:</b>\t{aggregator_data_set}</br>
+    <b>Evaluator Name:</b>\t{evaluator_name}</br>
+    <b>Scorer Name:</b>\t{scorer_name}</br>
+    <b>Entities:</b>\t{entities}</br>"""
+    for annotation in annotations:
+        header_1 += f"\n<b>{annotation}:</b>\t{{{annotation}}}</br>"
+    return header_1
 
 
 def get_item_header(config, rucksack, key):
@@ -470,7 +482,8 @@ def get_gold_html(config, rucksack, item):
 
     for entity in list(reversed(gold_entities)):
         entity["annotations_string"] = get_annotations_string(entity)
-        gold_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string}</p>'.format(
+        gold_entities_html += '<p><span class="color entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{' \
+                              'key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string}</p>'.format(
             **entity)
 
     return gold_html, gold_entities_html
@@ -505,10 +518,14 @@ def get_predicted_html(config, rucksack, item):
         entity["annotations_string"] = get_annotations_string(entity)
 
         if entity["state_tag"] == "FP":
-            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string} ({state_tag})</p>'.format(
+            predicted_entities_html += '<p><span class="color entities" id="{hashid}"><s><b>{' \
+                                       'surfaceForm}</b></s></span> (<a href="{key}">{key}</a>): {start} - {end}: {' \
+                                       'entity_type}{annotations_string} ({state_tag})</p>'.format(
                 **entity)
         else:
-            predicted_entities_html += '<p><span class="color  entities" id="{hashid}"><b>{surfaceForm}</b></span> (<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{annotations_string} ({state_tag})</p>'.format(
+            predicted_entities_html += '<p><span class="color  entities" id="{hashid}"><b>{surfaceForm}</b></span> (' \
+                                       '<a href="{key}">{key}</a>): {start} - {end}: {entity_type}{' \
+                                       'annotations_string} ({state_tag})</p>'.format(
                 **entity)
 
     return predicted_html, predicted_entities_html
@@ -524,7 +541,8 @@ def get_next_button(key):
         TYPE: Description
     """
 
-    html = """<p><a id="next_page_link" class="btn btn-secondary" href="{url}" role="button" style="float: right;">Next Item &raquo;</a></p>"""
+    html = """<p><a id="next_page_link" class="btn btn-secondary" href="{url}" role="button" style="float: 
+    right;">Next Item &raquo;</a></p>"""
     url = os.path.join(str(key) + ".html")
 
     if key:
@@ -545,7 +563,8 @@ def get_previous_button(key):
         TYPE: Description
     """
 
-    html = """<p><a id="previous_page_link" class="btn btn-secondary" href="{url}" role="button">&laquo; Previous Item</a></p>"""
+    html = """<p><a id="previous_page_link" class="btn btn-secondary" href="{url}" role="button">&laquo; Previous 
+    Item</a></p>"""
     url = os.path.join(str(key) + ".html")
 
     if key:
