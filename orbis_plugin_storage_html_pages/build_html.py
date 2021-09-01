@@ -3,7 +3,7 @@
 import os
 import hashlib
 
-from .annotation_entities import get_all_entities_of_annotation
+from orbis_eval.libs import filter
 
 from .templates.js_arrow_key_navigation import js_arrow_key_navigation as js_arrow_key_navigation_template
 from .templates.css_bootstrap import css_bootstrap as css_bootstrap_template
@@ -133,7 +133,7 @@ def get_score_coloring():
     return ""
 
 
-def get_gold_entities(rucksack, item, gold_html, entity_types=False):
+def get_gold_entities(rucksack, item, gold_html, entity_types=False, annotations={}):
     """Summary
 
     Args:
@@ -141,6 +141,7 @@ def get_gold_entities(rucksack, item, gold_html, entity_types=False):
         item (TYPE): Description
         gold_html (TYPE): Description
         entity_types (bool, optional): Description
+        annotations (dict): Description
 
     Returns:
         TYPE: gold_entities, gold_html
@@ -157,7 +158,8 @@ def get_gold_entities(rucksack, item, gold_html, entity_types=False):
     for entity in sorted(item['gold'], key=lambda x: int(x['end']), reverse=True):
         entity_id = "{},{}".format(entity['start'], entity['end'])
 
-        if entity_types and len(entity_types) > 0 and entity['entity_type'] not in entity_types:
+        if (entity_types and len(entity_types) > 0 and entity['entity_type'] not in entity_types) \
+                or not filter.keep_entity(entity, annotations):
             continue
 
         hashid = f'{get_hashid(entity_id)}'
@@ -236,9 +238,13 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
     last_end = len(item['corpus'])
 
     for e_idx, entity in enumerate(sorted(item['computed'], key=lambda x: int(x['document_end']), reverse=True)):
-        entity_types = config['scoring'].get('entities', [])
+        entity_types = rucksack.result_summary(specific='binary_classification')['entities']
+        annotations = rucksack.result_summary(specific='binary_classification')['annotations']
 
-        if entity['entity_type'] not in entity_types and len(entity_types) > 0:
+        if (entity['entity_type'] not in entity_types and len(entity_types) > 0) \
+                or not filter.keep_entity(entity, annotations,
+                                          [gold_item for gold_item in item['gold'] if
+                                           gold_item['entity_type'] in entity_types]):
             continue
 
         entity_id = "{},{}".format(entity['document_start'], entity['document_end'])
@@ -337,7 +343,7 @@ def get_top_header(config, rucksack):
             "entities": ", ".join([e for e in rucksack.result_summary(specific='binary_classification')['entities']])
         }
 
-        annotations = get_all_entities_of_annotation(rucksack.open)
+        annotations = rucksack.result_summary(specific='binary_classification')['annotations']
         for annotation_type in annotations:
             top_header_1[annotation_type] = ", ".join(annotations[annotation_type])
 
@@ -475,9 +481,11 @@ def get_gold_html(config, rucksack, item):
     gold_html = item['corpus']
     if config['aggregation']['service']['name'] and config['evaluation']['name'] and config['scoring']['name']:
         entity_types = rucksack.result_summary(specific='binary_classification')['entities']
+        annotations = rucksack.result_summary(specific='binary_classification')['annotations']
     else:
         entity_types = False
-    gold_entities, gold_html = get_gold_entities(rucksack, item, gold_html, entity_types)
+        annotations = {}
+    gold_entities, gold_html = get_gold_entities(rucksack, item, gold_html, entity_types, annotations)
     gold_entities_html = ""
 
     for entity in list(reversed(gold_entities)):
