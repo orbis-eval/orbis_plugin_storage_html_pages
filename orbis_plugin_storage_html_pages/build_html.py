@@ -239,7 +239,10 @@ def get_predicted_entities(config, rucksack, item, predicted_html):
 
     for e_idx, entity in enumerate(sorted(item['computed'], key=lambda x: int(x['document_end']), reverse=True)):
         entity_types = rucksack.result_summary(specific='binary_classification')['entities']
-        annotations = rucksack.result_summary(specific='binary_classification')['annotations']
+        if 'annotations' in rucksack.result_summary(specific='binary_classification'):
+            annotations = rucksack.result_summary(specific='binary_classification')['annotations']
+        else:
+            annotations = {}
 
         if (entity['entity_type'] not in entity_types and len(entity_types) > 0) \
                 or not filter.keep_entity(entity, annotations,
@@ -342,10 +345,12 @@ def get_top_header(config, rucksack):
             "scorer_name": config['scoring']['name'],
             "entities": ", ".join([e for e in rucksack.result_summary(specific='binary_classification')['entities']])
         }
-
-        annotations = rucksack.result_summary(specific='binary_classification')['annotations']
-        for annotation_type in annotations:
-            top_header_1[annotation_type] = ", ".join(annotations[annotation_type])
+        if 'annotations' in rucksack.result_summary(specific='binary_classification'):
+            annotations = rucksack.result_summary(specific='binary_classification')['annotations']
+            for annotation_type in annotations:
+                top_header_1[annotation_type] = ", ".join(annotations[annotation_type])
+        else:
+            annotations = {}
 
         top_header_2 = {
             "has_score": rucksack.result_summary(specific='binary_classification')['has_score'],
@@ -481,7 +486,10 @@ def get_gold_html(config, rucksack, item):
     gold_html = item['corpus']
     if config['aggregation']['service']['name'] and config['evaluation']['name'] and config['scoring']['name']:
         entity_types = rucksack.result_summary(specific='binary_classification')['entities']
-        annotations = rucksack.result_summary(specific='binary_classification')['annotations']
+        if 'annotations' in rucksack.result_summary(specific='binary_classification'):
+            annotations = rucksack.result_summary(specific='binary_classification')['annotations']
+        else:
+            annotations = {}
     else:
         entity_types = False
         annotations = {}
